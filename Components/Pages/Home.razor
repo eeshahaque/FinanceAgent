@@ -1,0 +1,194 @@
+@page "/"
+@rendermode InteractiveServer
+@inject FinanceQueryService Queries
+@inject BudgetAdvisorAgent Advisor
+@inject AgentPipeline Pipeline
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h1 class="me-auto mb-0">Dashboard</h1>
+    @if (months.Count > 0)
+    {
+        <select class="form-select w-auto" value="@selectedMonth.ToString("yyyy-MM")" @onchange="OnMonthChanged">
+            @foreach (var m in months)
+            {
+                <option value="@m.ToString("yyyy-MM")">@m.ToString("MMMM yyyy")</option>
+            }
+        </select>
+    }
+    <button class="btn btn-outline-primary" @onclick="RunAgents" disabled="@running">
+        @(running ? "Agents working..." : "Run agents")
+    </button>
+</div>
+
+@if (message is not null)
+{
+    <div class="alert alert-info py-2">@message</div>
+}
+
+@if (summary is null)
+{
+    <p>Loading...</p>
+}
+else if (months.Count == 0)
+{
+    <div class="panel">
+        <p class="mb-2">No transactions yet.</p>
+        <a class="btn btn-primary" href="import">Import a bank CSV</a>
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3"><div class="stat-card"><div class="label">Income</div><div class="value money pos">@summary.Income.ToString("C")</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card"><div class="label">Spending</div><div class="value money">@summary.Spending.ToString("C")</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card"><div class="label">Net</div><div class="value money @(summary.Net < 0 ? "neg" : "pos")">@summary.Net.ToString("C")</div></div></div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="label">Needs attention</div>
+                <div class="value">@anomalies.Count <small class="text-muted fs-6">flagged</small> · @needsReview <small class="text-muted fs-6">to review</small></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="panel">
+                <h2>Spending vs budget — @summary.Label</h2>
+                @foreach (var c in summary.Categories.Where(c => !c.ExcludeFromBudget && (c.Spent > 0 || c.Budget > 0)).OrderByDescending(c => c.Spent))
+                {
+                    var pct = c.Budget > 0 ? Math.Min(100, c.PercentUsed * 100) : (c.Spent > 0 ? 100 : 0);
+                    var cls = c.OverBudget ? "over" : c.PercentUsed > 0.85 ? "warn" : "";
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small">
+                            <a href="transactions?category=@c.CategoryId&month=@selectedMonth.ToString("yyyy-MM")">@c.Name</a>
+                            <span class="money">
+                                @c.Spent.ToString("C")
+                                @if (c.Budget > 0) { <span class="text-muted"> / @c.Budget.ToString("C")</span> }
+                                else { <span class="text-muted"> (no budget)</span> }
+                            </span>
+                        </div>
+                        <div class="budget-bar"><div class="@cls" style="width:@(pct.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="panel">
+                <h2>Budget alerts</h2>
+                @if (alerts.Count == 0)
+                {
+                    <p class="text-muted mb-0">Every category is on track for @months[0].ToString("MMMM").</p>
+                }
+                <ul class="mb-0 ps-3">
+                    @foreach (var a in alerts)
+                    {
+                        <li>@a.Message</li>
+                    }
+                </ul>
+            </div>
+
+            <div class="panel">
+                <h2>Flagged transactions</h2>
+                @if (anomalies.Count == 0)
+                {
+                    <p class="text-muted mb-0">Nothing unusual found.</p>
+                }
+                @foreach (var t in anomalies.Take(5))
+                {
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>@t.Date.ToString("MMM d") · @t.Merchant</span>
+                            <span class="money neg">@t.Amount.ToString("C")</span>
+                        </div>
+                        <div class="flag">@t.AnomalyReason</div>
+                    </div>
+                }
+                @if (anomalies.Count > 5)
+                {
+                    <a href="transactions?flagged=true">See all @anomalies.Count</a>
+                }
+            </div>
+
+            <div class="panel">
+                <h2>Suggested budget changes</h2>
+                @if (suggestions.Count == 0)
+                {
+                    <p class="text-muted mb-0">Your budgets match your recent spending.</p>
+                }
+                @foreach (var s in suggestions.Take(3))
+                {
+                    <div class="mb-2">
+                        <strong>@s.CategoryName</strong>: @s.CurrentBudget.ToString("C") → @s.SuggestedBudget.ToString("C")
+                        <div class="small text-muted">@s.Reason</div>
+                    </div>
+                }
+                @if (suggestions.Count > 0)
+                {
+                    <a href="budgets">Review on the Budgets page</a>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<DateTime> months = new();
+    private DateTime selectedMonth;
+    private MonthSummary? summary;
+    private List<Transaction> anomalies = new();
+    private List<BudgetSuggestion> suggestions = new();
+    private List<PaceAlert> alerts = new();
+    private int needsReview;
+    private bool running;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(resetMonth: true);
+    }
+
+    private async Task LoadAsync(bool resetMonth)
+    {
+        months = await Queries.GetMonthsWithDataAsync();
+        if (resetMonth || !months.Contains(selectedMonth))
+            selectedMonth = months.FirstOrDefault(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1));
+
+        summary = await Queries.GetMonthSummaryAsync(selectedMonth.Year, selectedMonth.Month);
+        anomalies = await Queries.GetTransactionsAsync(new TransactionFilter(FlaggedOnly: true, Limit: 100));
+        needsReview = await Queries.CountNeedsReviewAsync();
+        suggestions = await Advisor.GetSuggestionsAsync();
+        alerts = await Advisor.GetPaceAlertsAsync();
+    }
+
+    private async Task OnMonthChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse($"{e.Value}-01", out var month))
+        {
+            selectedMonth = month;
+            summary = await Queries.GetMonthSummaryAsync(month.Year, month.Month);
+        }
+    }
+
+    private async Task RunAgents()
+    {
+        running = true;
+        message = null;
+        try
+        {
+            var r = await Pipeline.RunAsync();
+            message = $"Rules categorized {r.RuleMatched} transactions, {r.AnomaliesFlagged} new anomalies flagged.";
+            await LoadAsync(resetMonth: false);
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            running = false;
+        }
+    }
+}

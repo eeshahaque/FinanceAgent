@@ -1,0 +1,155 @@
+@page "/budgets"
+@rendermode InteractiveServer
+@using FinanceAgent.Data
+@inject FinanceQueryService Queries
+@inject BudgetAdvisorAgent Advisor
+
+<PageTitle>Budgets</PageTitle>
+
+<h1>Budgets</h1>
+
+@if (status is not null)
+{
+    <div class="alert alert-info py-2">@status</div>
+}
+
+<div class="panel">
+    <h2>Budget advisor suggestions</h2>
+    <p class="small text-muted">Based on your last @(months.Count) month(s) of spending. Nothing changes until you apply a suggestion.</p>
+    @if (suggestions.Count == 0)
+    {
+        <p class="text-muted mb-0">No changes suggested — your budgets match how you actually spend.</p>
+    }
+    @foreach (var s in suggestions)
+    {
+        <div class="d-flex flex-wrap align-items-center gap-2 border-top py-2">
+            <div class="me-auto">
+                <strong>@s.CategoryName</strong>: @s.CurrentBudget.ToString("C") → <strong>@s.SuggestedBudget.ToString("C")</strong>
+                <div class="small text-muted">@s.Reason</div>
+            </div>
+            <button class="btn btn-sm btn-primary" @onclick="() => Apply(s)">Apply</button>
+            <button class="btn btn-sm btn-link" @onclick="() => suggestions.Remove(s)">Ignore</button>
+        </div>
+    }
+</div>
+
+<div class="panel">
+    <h2>Monthly budgets</h2>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th class="text-end">@(months.Count > 0 ? months[0].ToString("MMM yyyy") : "This month")</th>
+                    <th class="text-end">@(months.Count)-mo avg</th>
+                    <th style="width:10rem">Budget</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    <tr>
+                        <td>
+                            @row.Name
+                            @if (row.ExcludeFromBudget) { <span class="badge text-bg-light">not spending</span> }
+                        </td>
+                        <td class="text-end money @(row.Budget > 0 && row.Latest > row.Budget ? "neg" : "")">@row.Latest.ToString("C")</td>
+                        <td class="text-end money">@row.Average.ToString("C")</td>
+                        <td>
+                            @if (!row.ExcludeFromBudget && row.Name != DbSeeder.Uncategorized)
+                            {
+                                <input type="number" min="0" step="10" class="form-control form-control-sm" @bind="row.Edit" />
+                            }
+                        </td>
+                        <td>
+                            @if (!row.ExcludeFromBudget && row.Edit != row.Budget)
+                            {
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => Save(row)">Save</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-semibold">
+                    <td>Total</td>
+                    <td class="text-end money">@rows.Where(r => !r.ExcludeFromBudget).Sum(r => r.Latest).ToString("C")</td>
+                    <td class="text-end money">@rows.Where(r => !r.ExcludeFromBudget).Sum(r => r.Average).ToString("C")</td>
+                    <td class="money">@rows.Where(r => !r.ExcludeFromBudget).Sum(r => r.Budget).ToString("C")</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <p class="small text-muted mb-0">To add, rename, or delete categories, go to <a href="categories">Categories</a>.</p>
+</div>
+
+@code {
+    private class Row
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = "";
+        public bool ExcludeFromBudget { get; init; }
+        public decimal Budget { get; set; }
+        public decimal Edit { get; set; }
+        public decimal Latest { get; init; }
+        public decimal Average { get; init; }
+    }
+
+    private List<DateTime> months = new();
+    private List<Row> rows = new();
+    private List<BudgetSuggestion> suggestions = new();
+    private string? status;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        months = (await Queries.GetMonthsWithDataAsync()).Take(3).ToList();
+        var ordered = months.OrderBy(m => m).ToList();
+        var spend = await Queries.GetMonthlySpendByCategoryAsync(ordered);
+        var categories = await Queries.GetCategoriesAsync();
+
+        rows = categories.Select(c =>
+        {
+            var monthly = spend.GetValueOrDefault(c.Id) ?? new decimal[ordered.Count];
+            return new Row
+            {
+                Id = c.Id,
+                Name = c.Name,
+                ExcludeFromBudget = c.ExcludeFromBudget,
+                Budget = c.MonthlyBudget,
+                Edit = c.MonthlyBudget,
+                Latest = monthly.Length > 0 ? monthly[^1] : 0,
+                Average = monthly.Length > 0 ? Math.Round(monthly.Average(), 2) : 0
+            };
+        })
+        .OrderBy(r => r.ExcludeFromBudget).ThenByDescending(r => r.Average).ThenBy(r => r.Name)
+        .ToList();
+
+        suggestions = await Advisor.GetSuggestionsAsync();
+    }
+
+    private async Task Apply(BudgetSuggestion s)
+    {
+        await Advisor.SetBudgetAsync(s.CategoryId, s.SuggestedBudget, s.Reason, nameof(BudgetAdvisorAgent));
+        status = $"{s.CategoryName} budget set to {s.SuggestedBudget:C}.";
+        await LoadAsync();
+    }
+
+    private async Task Save(Row row)
+    {
+        try
+        {
+            await Advisor.SetBudgetAsync(row.Id, row.Edit, "Edited on the Budgets page", "User");
+            status = $"{row.Name} budget set to {row.Edit:C}.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            status = $"Error: {ex.Message}";
+        }
+    }
+}

@@ -1,0 +1,250 @@
+@page "/categories"
+@rendermode InteractiveServer
+@using FinanceAgent.Data
+@inject CategoryService CategoryOps
+
+<PageTitle>Categories</PageTitle>
+
+<h1>Categories</h1>
+<p class="text-muted">
+    Add, rename, or delete the categories your transactions are sorted into.
+    <strong>Expense</strong> categories count toward spending and budgets; <strong>Income</strong> and
+    <strong>Transfer</strong> categories don't.
+</p>
+
+@if (status is not null)
+{
+    <div class="alert @(statusIsError ? "alert-danger" : "alert-success") py-2">@status</div>
+}
+
+<div class="panel">
+    <h2>Add a category</h2>
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-5">
+            <label class="form-label small" for="newName">Name</label>
+            <input id="newName" class="form-control" maxlength="@CategoryService.MaxNameLength" placeholder="e.g. Pets" @bind="newName" />
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small" for="newKind">Type</label>
+            <select id="newKind" class="form-select" @bind="newKind">
+                @foreach (var kind in Enum.GetValues<CategoryKind>())
+                {
+                    <option value="@kind">@kind</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-2">
+            <label class="form-label small" for="newBudget">Monthly budget</label>
+            <input id="newBudget" type="number" min="0" step="10" class="form-control" @bind="newBudget" disabled="@(newKind != CategoryKind.Expense)" />
+        </div>
+        <div class="col-sm-2">
+            <button class="btn btn-primary w-100" @onclick="Add" disabled="@(busy || string.IsNullOrWhiteSpace(newName))">Add</button>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Your categories</h2>
+    @if (rows is null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th style="width:9rem">Type</th>
+                        <th style="width:9rem">Monthly budget</th>
+                        <th class="text-end">Transactions</th>
+                        <th style="width:12rem"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in rows)
+                    {
+                        <tr>
+                            @if (editing == row)
+                            {
+                                <td><input class="form-control form-control-sm" maxlength="@CategoryService.MaxNameLength" @bind="row.EditName" disabled="@row.IsSystem" /></td>
+                                <td>
+                                    <select class="form-select form-select-sm" @bind="row.EditKind" disabled="@row.IsSystem">
+                                        @foreach (var kind in Enum.GetValues<CategoryKind>())
+                                        {
+                                            <option value="@kind">@kind</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input type="number" min="0" step="10" class="form-control form-control-sm" @bind="row.EditBudget" disabled="@(row.EditKind != CategoryKind.Expense || row.IsSystem)" /></td>
+                                <td class="text-end">@row.TransactionCount</td>
+                                <td class="text-end text-nowrap">
+                                    <button class="btn btn-sm btn-primary" @onclick="() => Save(row)" disabled="@busy">Save</button>
+                                    <button class="btn btn-sm btn-link" @onclick="CancelEdit">Cancel</button>
+                                </td>
+                            }
+                            else if (deleting == row)
+                            {
+                                <td colspan="5">
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span>Delete <strong>@row.Name</strong>?</span>
+                                        @if (row.TransactionCount > 0 || row.RuleCount > 0)
+                                        {
+                                            <span>Move its @row.TransactionCount transaction(s) to</span>
+                                            <select class="form-select form-select-sm w-auto" @bind="moveToId">
+                                                @foreach (var other in rows.Where(r => r != row))
+                                                {
+                                                    <option value="@other.Id">@other.Name</option>
+                                                }
+                                            </select>
+                                        }
+                                        <button class="btn btn-sm btn-danger" @onclick="() => Delete(row)" disabled="@busy">Delete</button>
+                                        <button class="btn btn-sm btn-link" @onclick="() => deleting = null">Cancel</button>
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    @row.Name
+                                    @if (row.IsSystem) { <span class="badge text-bg-light ms-1" title="Holds transactions waiting for review">built-in</span> }
+                                </td>
+                                <td>@row.Kind</td>
+                                <td class="money">@(row.Kind == CategoryKind.Expense && !row.IsSystem ? row.Budget.ToString("C") : "—")</td>
+                                <td class="text-end">
+                                    @if (row.TransactionCount > 0)
+                                    {
+                                        <a href="transactions?category=@row.Id">@row.TransactionCount</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">0</span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    @if (!row.IsSystem)
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => StartEdit(row)" disabled="@busy">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger ms-1" @onclick="() => StartDelete(row)" disabled="@busy">Delete</button>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted mb-0">
+            Built-in keyword rules (e.g. STARBUCKS → Dining) follow category names, so they stop applying if you rename or
+            delete that category. Merchant rules you taught on the Transactions page follow the category itself.
+        </p>
+    }
+</div>
+
+@code {
+    private class Row
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = "";
+        public CategoryKind Kind { get; init; }
+        public decimal Budget { get; init; }
+        public int TransactionCount { get; init; }
+        public int RuleCount { get; init; }
+        public bool IsSystem { get; init; }
+
+        public string EditName { get; set; } = "";
+        public CategoryKind EditKind { get; set; }
+        public decimal EditBudget { get; set; }
+    }
+
+    private List<Row>? rows;
+    private Row? editing;
+    private Row? deleting;
+    private int moveToId;
+    private string? newName;
+    private CategoryKind newKind = CategoryKind.Expense;
+    private decimal newBudget;
+    private bool busy;
+    private string? status;
+    private bool statusIsError;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var usage = await CategoryOps.GetCategoriesWithUsageAsync();
+        rows = usage.Select(u => new Row
+        {
+            Id = u.Category.Id,
+            Name = u.Category.Name,
+            Kind = u.Category.Kind,
+            Budget = u.Category.MonthlyBudget,
+            TransactionCount = u.TransactionCount,
+            RuleCount = u.RuleCount,
+            IsSystem = u.IsSystem
+        }).ToList();
+        editing = null;
+        deleting = null;
+    }
+
+    private void StartEdit(Row row)
+    {
+        deleting = null;
+        row.EditName = row.Name;
+        row.EditKind = row.Kind;
+        row.EditBudget = row.Budget;
+        editing = row;
+    }
+
+    private void CancelEdit() => editing = null;
+
+    private void StartDelete(Row row)
+    {
+        editing = null;
+        deleting = row;
+        moveToId = rows!.FirstOrDefault(r => r.IsSystem)?.Id ?? rows!.First(r => r != row).Id;
+    }
+
+    private Task Add() => Run(async () =>
+    {
+        var added = await CategoryOps.AddAsync(newName!, newKind, newBudget);
+        newName = null;
+        newBudget = 0;
+        newKind = CategoryKind.Expense;
+        return $"Added {added.Name}.";
+    });
+
+    private Task Save(Row row) => Run(async () =>
+    {
+        await CategoryOps.UpdateAsync(row.Id, row.EditName, row.EditKind, row.EditBudget);
+        return $"Saved {row.EditName.Trim()}.";
+    });
+
+    private Task Delete(Row row) => Run(async () =>
+    {
+        var moved = await CategoryOps.DeleteAsync(row.Id, moveToId);
+        var target = rows!.First(r => r.Id == moveToId).Name;
+        return moved > 0 ? $"Deleted {row.Name} and moved {moved} transaction(s) to {target}." : $"Deleted {row.Name}.";
+    });
+
+    private async Task Run(Func<Task<string>> work)
+    {
+        busy = true;
+        try
+        {
+            status = await work();
+            statusIsError = false;
+            await LoadAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            status = ex.Message;
+            statusIsError = true;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

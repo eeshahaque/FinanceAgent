@@ -1,0 +1,170 @@
+@page "/import"
+@rendermode InteractiveServer
+@using FinanceAgent.Data
+@using Microsoft.EntityFrameworkCore
+@inject TransactionImportService ImportService
+@inject RuleBasedCategorizer Categorizer
+@inject AnomalyDetectionAgent AnomalyAgent
+@inject AgentPipeline Pipeline
+@inject UserDbContextFactory DbFactory
+
+<PageTitle>Import Transactions</PageTitle>
+
+<h1>Import Transactions</h1>
+
+<div class="panel">
+    <h2>1. Upload a bank CSV</h2>
+    <p class="text-muted small mb-2">
+        Needs a date column, a description column, and either an <code>Amount</code> column (negative = money out)
+        or separate <code>Debit</code>/<code>Credit</code> columns. Rows already imported are skipped automatically.
+    </p>
+
+    @if (accounts.Count > 1)
+    {
+        <select class="form-select w-auto mb-2" @bind="accountId">
+            @foreach (var a in accounts)
+            {
+                <option value="@a.Id">@a.Name (@a.Institution)</option>
+            }
+        </select>
+    }
+
+    <InputFile OnChange="HandleFileSelected" accept=".csv" disabled="@busy" />
+
+    <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" id="autorun" @bind="autoRunAgents" />
+        <label class="form-check-label" for="autorun">Run the agents automatically after import</label>
+    </div>
+
+    @if (importResult is not null)
+    {
+        <p class="mt-2 mb-0">
+            Imported <strong>@importResult.Imported</strong> transactions.
+            @if (importResult.SkippedDuplicates > 0) { <span>Skipped @importResult.SkippedDuplicates already-imported rows. </span> }
+            @if (importResult.SkippedInvalid > 0) { <span>Skipped @importResult.SkippedInvalid rows with an unreadable date or amount.</span> }
+        </p>
+    }
+</div>
+
+<div class="panel">
+    <h2>2. Run the agents</h2>
+    <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" @onclick="RunPipeline" disabled="@busy">Run all agents</button>
+        <button class="btn btn-outline-secondary" @onclick="RunCategorization" disabled="@busy">Keyword rules only</button>
+        <button class="btn btn-outline-secondary" @onclick="RunAnomalyScan" disabled="@busy">Anomaly scan only</button>
+    </div>
+
+    @if (busy)
+    {
+        <p class="mt-2 mb-0">@busyText</p>
+    }
+    @foreach (var line in results)
+    {
+        <p class="mt-2 mb-0">@line</p>
+    }
+</div>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">Error: @errorMessage</div>
+}
+
+<div class="panel">
+    <h2>Maintenance</h2>
+    <p class="small text-muted mb-2">
+        Files imported before duplicate detection existed may have been added more than once.
+        This keeps the first copy of each transaction with the same date, amount and description.
+    </p>
+    @if (!confirmDedupe)
+    {
+        <button class="btn btn-outline-danger btn-sm" @onclick="() => confirmDedupe = true" disabled="@busy">Remove duplicate imports…</button>
+    }
+    else
+    {
+        <span class="me-2">Delete duplicate rows? This can't be undone.</span>
+        <button class="btn btn-danger btn-sm" @onclick="RemoveDuplicates">Yes, remove them</button>
+        <button class="btn btn-link btn-sm" @onclick="() => confirmDedupe = false">Cancel</button>
+    }
+</div>
+
+@code {
+    private List<Account> accounts = new();
+    private int accountId;
+    private bool busy;
+    private string busyText = "";
+    private bool autoRunAgents = true;
+    private bool confirmDedupe;
+    private ImportResult? importResult;
+    private List<string> results = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        accounts = await db.Accounts.AsNoTracking().OrderBy(a => a.Id).ToListAsync();
+        accountId = accounts.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        importResult = null;
+        await RunBusy("Importing...", async () =>
+        {
+            using var browserStream = e.File.OpenReadStream(maxAllowedSize: 5_000_000);
+            using var memoryStream = new MemoryStream();
+            await browserStream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0; // rewind before parsing
+
+            importResult = await ImportService.ImportFromCsvAsync(memoryStream, accountId);
+            if (autoRunAgents && importResult.Imported > 0)
+            {
+                busyText = "Running agents...";
+                StateHasChanged();
+                AddPipelineResult(await Pipeline.RunAsync());
+            }
+        });
+    }
+
+    private Task RunPipeline() => RunBusy("Running agents...", async () => AddPipelineResult(await Pipeline.RunAsync()));
+
+    private Task RunCategorization() => RunBusy("Applying keyword rules...", async () =>
+        results.Add($"Keyword rules categorized {await Categorizer.CategorizeUncategorizedAsync()} transactions."));
+
+    private Task RunAnomalyScan() => RunBusy("Scanning for anomalies...", async () =>
+        results.Add($"Anomaly agent flagged {await AnomalyAgent.ScanAsync()} new transactions."));
+
+    private Task RemoveDuplicates() => RunBusy("Removing duplicates...", async () =>
+    {
+        confirmDedupe = false;
+        var removed = await ImportService.RemoveDuplicateImportsAsync();
+        results.Add(removed == 0 ? "No duplicate rows found." : $"Removed {removed} duplicate rows.");
+        if (removed > 0) await AnomalyAgent.ScanAsync();
+    });
+
+    private void AddPipelineResult(PipelineResult r)
+    {
+        results.Add($"Keyword rules categorized {r.RuleMatched} transactions.");
+        results.Add($"Anomaly agent flagged {r.AnomaliesFlagged} new transactions.");
+    }
+
+    private async Task RunBusy(string text, Func<Task> work)
+    {
+        busy = true;
+        busyText = text;
+        errorMessage = null;
+        results.Clear();
+        StateHasChanged();
+        try
+        {
+            await work();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

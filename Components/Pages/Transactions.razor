@@ -1,0 +1,183 @@
+@page "/transactions"
+@rendermode InteractiveServer
+@inject FinanceQueryService Queries
+@inject TransactionService TxnService
+@inject AnomalyDetectionAgent AnomalyAgent
+
+<PageTitle>Transactions</PageTitle>
+
+<h1>Transactions</h1>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <select class="form-select w-auto" value="@monthFilter" @onchange="e => SetFilter(() => monthFilter = Text(e))">
+        <option value="">All months</option>
+        @foreach (var m in months)
+        {
+            <option value="@m.ToString("yyyy-MM")">@m.ToString("MMMM yyyy")</option>
+        }
+    </select>
+    <select class="form-select w-auto" value="@categoryFilter" @onchange="e => SetFilter(() => categoryFilter = int.TryParse(Text(e), out var id) ? id : null)">
+        <option value="">All categories</option>
+        @foreach (var c in categories)
+        {
+            <option value="@c.Id">@c.Name</option>
+        }
+    </select>
+    <input class="form-control w-auto" placeholder="Search description" value="@search"
+           @onchange="e => SetFilter(() => search = Text(e))" />
+    <div class="form-check ms-1">
+        <input class="form-check-input" type="checkbox" id="flagged" checked="@flaggedOnly" @onchange="e => SetFilter(() => flaggedOnly = (bool)e.Value!)" />
+        <label class="form-check-label" for="flagged">Flagged only</label>
+    </div>
+    <div class="form-check ms-1">
+        <input class="form-check-input" type="checkbox" id="review" checked="@reviewOnly" @onchange="e => SetFilter(() => reviewOnly = (bool)e.Value!)" />
+        <label class="form-check-label" for="review">Needs review</label>
+    </div>
+    <div class="form-check ms-1" title="When you change a category, also apply it to this merchant's other uncategorized transactions and future imports">
+        <input class="form-check-input" type="checkbox" id="learn" @bind="learnRule" />
+        <label class="form-check-label" for="learn">Remember merchant</label>
+    </div>
+</div>
+
+@if (status is not null)
+{
+    <div class="alert alert-info py-2">@status</div>
+}
+
+@if (rows is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <p class="text-muted small">
+        @rows.Count transactions · total <span class="money">@rows.Sum(t => t.Amount).ToString("C")</span>
+        @if (rows.Count >= Limit) { <span> (showing the first @Limit — narrow the filters to see more)</span> }
+    </p>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="text-end">Amount</th>
+                    <th style="min-width:11rem">Category</th>
+                    <th>Source</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in rows)
+                {
+                    <tr>
+                        <td class="text-nowrap">@t.Date.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            @t.RawDescription
+                            @if (t.FlaggedAsAnomaly && !t.AnomalyDismissed)
+                            {
+                                <div class="flag">⚠ @t.AnomalyReason</div>
+                            }
+                        </td>
+                        <td class="text-end money @(t.Amount < 0 ? "neg" : "pos")">@t.Amount.ToString("C")</td>
+                        <td>
+                            <select class="form-select form-select-sm" value="@t.CategoryId" @onchange="e => Recategorize(t, e)">
+                                @foreach (var c in categories)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="small text-muted text-nowrap">
+                            @(t.CategorizationConfidence == 1.0 ? "Rule / you" : "—")
+                        </td>
+                        <td>
+                            @if (t.FlaggedAsAnomaly && !t.AnomalyDismissed)
+                            {
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => Dismiss(t)">Dismiss</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private const int Limit = 500;
+
+    [SupplyParameterFromQuery(Name = "category")] public int? CategoryParam { get; set; }
+    [SupplyParameterFromQuery(Name = "month")] public string? MonthParam { get; set; }
+    [SupplyParameterFromQuery(Name = "flagged")] public bool FlaggedParam { get; set; }
+    [SupplyParameterFromQuery(Name = "review")] public bool ReviewParam { get; set; }
+
+    private List<Transaction>? rows;
+    private List<Category> categories = new();
+    private List<DateTime> months = new();
+    private string monthFilter = "";
+    private int? categoryFilter;
+    private string? search;
+    private bool flaggedOnly;
+    private bool reviewOnly;
+    private bool learnRule = true;
+    private string? status;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categoryFilter = CategoryParam;
+        monthFilter = MonthParam ?? "";
+        flaggedOnly = FlaggedParam;
+        reviewOnly = ReviewParam;
+
+        categories = await Queries.GetCategoriesAsync();
+        months = await Queries.GetMonthsWithDataAsync();
+        await LoadAsync();
+    }
+
+    private static string Text(ChangeEventArgs e) => e.Value?.ToString() ?? string.Empty;
+
+    private async Task SetFilter(Action apply)
+    {
+        apply();
+        status = null;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        DateTime? from = null, to = null;
+        if (DateTime.TryParse($"{monthFilter}-01", out var m))
+        {
+            from = m;
+            to = m.AddMonths(1).AddDays(-1);
+        }
+
+        rows = await Queries.GetTransactionsAsync(new TransactionFilter(from, to, categoryFilter, search, flaggedOnly, reviewOnly, Limit));
+    }
+
+    private async Task Recategorize(Transaction t, ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var categoryId) || categoryId == t.CategoryId) return;
+        try
+        {
+            var others = await TxnService.RecategorizeAsync(t.Id, categoryId, learnRule, "User");
+            await AnomalyAgent.ScanAsync();
+            var name = categories.First(c => c.Id == categoryId).Name;
+            status = others > 0
+                ? $"Moved to {name}, plus {others} other transactions from the same merchant. Future imports will follow this rule."
+                : $"Moved \"{t.RawDescription}\" to {name}.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            status = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task Dismiss(Transaction t)
+    {
+        await TxnService.DismissAnomalyAsync(t.Id);
+        status = "Flag dismissed. The anomaly agent won't raise it again.";
+        await LoadAsync();
+    }
+}

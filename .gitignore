@@ -1,0 +1,28 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.rsuser
+
+# Local tool settings
+.claude/
+
+# Database files and backups
+*.mdf
+*.ldf
+*.bak
+
+# Secrets that should never be committed (use dotnet user-secrets instead)
+appsettings.*.local.json
+*.pfx
+.env
+
+# OS files
+Thumbs.db
+.DS_Store

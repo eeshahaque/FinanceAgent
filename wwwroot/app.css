@@ -957,3 +957,60 @@ input[type="file"]::file-selector-button {
     .filter-bar .form-control { width: auto; min-width: 160px; }
 
 .border-top, .border-bottom, .border { border-color: var(--border) !important; }
+
+/* Import history */
+.file-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.file-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .045);
+    border: 1px solid var(--border);
+    transition: border-color .2s, background-color .2s;
+}
+
+    .file-row.is-confirming {
+        background: rgba(255, 127, 140, .08);
+        border-color: rgba(255, 127, 140, .45);
+    }
+
+.file-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    background: rgba(139, 123, 255, .18);
+    color: #cfc7ff;
+}
+
+.file-main { flex: 1; min-width: 200px; }
+.file-name { font-weight: 700; overflow-wrap: anywhere; }
+
+.file-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    color: var(--text-3);
+    font-size: .8rem;
+}
+
+.file-confirm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: #ffd0d5;
+    font-weight: 600;
+}

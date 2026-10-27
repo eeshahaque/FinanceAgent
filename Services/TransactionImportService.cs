@@ -9,6 +9,13 @@ namespace FinanceAgent.Services;
 
 public record ImportResult(int Imported, int SkippedDuplicates, int SkippedInvalid);
 
+public record ImportedFile(int? BatchId, string FileName, DateTime? ImportedAt, int TransactionCount,
+    DateTime? FirstDate, DateTime? LastDate, int SkippedDuplicates)
+{
+    // Rows imported before file history existed have no batch and are grouped together
+    public bool IsLegacy => BatchId is null;
+}
+
 public class TransactionImportService
 {
     private readonly UserDbContextFactory _dbFactory;
@@ -103,7 +110,7 @@ public class TransactionImportService
         return rows;
     }
 
-    public async Task<ImportResult> ImportFromCsvAsync(Stream csvStream, int accountId)
+    public async Task<ImportResult> ImportFromCsvAsync(Stream csvStream, int accountId, string fileName)
     {
         var rows = ParseCsv(csvStream, out var invalid);
 
@@ -148,10 +155,75 @@ public class TransactionImportService
             });
         }
 
+        // Only files that added rows get a history entry; a fully duplicate file has nothing to undo
+        if (newTransactions.Count > 0)
+        {
+            var batch = new ImportBatch
+            {
+                AccountId = account.Id,
+                FileName = Path.GetFileName(fileName).Trim() is { Length: > 0 } name ? name[..Math.Min(name.Length, 260)] : "upload.csv",
+                SkippedDuplicates = duplicates,
+                SkippedInvalid = invalid
+            };
+            db.ImportBatches.Add(batch);
+            foreach (var t in newTransactions) t.ImportBatch = batch;
+        }
+
         db.Transactions.AddRange(newTransactions);
         await db.SaveChangesAsync();
 
         return new ImportResult(newTransactions.Count, duplicates, invalid);
+    }
+
+    public async Task<List<ImportedFile>> GetImportHistoryAsync()
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var files = await db.ImportBatches
+            .OrderByDescending(b => b.ImportedAt)
+            .Select(b => new ImportedFile(b.Id, b.FileName, b.ImportedAt, b.Transactions.Count(),
+                b.Transactions.Min(t => (DateTime?)t.Date), b.Transactions.Max(t => (DateTime?)t.Date), b.SkippedDuplicates))
+            .ToListAsync();
+
+        var legacy = await db.Transactions.Where(t => t.ImportBatchId == null)
+            .GroupBy(t => 1)
+            .Select(g => new { Count = g.Count(), First = g.Min(t => t.Date), Last = g.Max(t => t.Date) })
+            .FirstOrDefaultAsync();
+        if (legacy is not null)
+            files.Add(new ImportedFile(null, "Imported before file history", null, legacy.Count, legacy.First, legacy.Last, 0));
+
+        return files;
+    }
+
+    // Deletes every transaction that came from one uploaded file (or, with null, every row imported
+    // before file history existed). Returns how many transactions were removed.
+    public async Task<int> DeleteImportAsync(int? batchId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        await using var tx = await db.Database.BeginTransactionAsync();
+
+        ImportBatch? batch = null;
+        if (batchId is int id)
+        {
+            batch = await db.ImportBatches.FirstOrDefaultAsync(b => b.Id == id)
+                ?? throw new InvalidOperationException("That import no longer exists.");
+        }
+
+        var removed = await db.Transactions.Where(t => t.ImportBatchId == batchId).ExecuteDeleteAsync();
+        if (batch is not null) db.ImportBatches.Remove(batch);
+
+        db.AgentActions.Add(new AgentAction
+        {
+            AgentName = "User",
+            ActionType = "DeletedImport",
+            Input = batch?.FileName ?? "Imported before file history",
+            Output = $"{removed} transactions removed",
+            Reasoning = "Deleted on the Import page"
+        });
+
+        await db.SaveChangesAsync();
+        await tx.CommitAsync();
+        return removed;
     }
 
     // Removes rows that were imported more than once before duplicate detection existed.

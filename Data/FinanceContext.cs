@@ -17,6 +17,7 @@ namespace FinanceAgent.Data
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<AgentAction> AgentActions => Set<AgentAction>();
         public DbSet<CategoryRule> CategoryRules => Set<CategoryRule>();
+        public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,12 +33,27 @@ namespace FinanceAgent.Data
             modelBuilder.Entity<Category>().HasIndex(c => new { c.UserId, c.Name }).IsUnique();
             modelBuilder.Entity<CategoryRule>().Property(r => r.Keyword).HasMaxLength(200);
             modelBuilder.Entity<AgentAction>().HasIndex(a => a.Timestamp);
+            modelBuilder.Entity<ImportBatch>().Property(b => b.FileName).HasMaxLength(260);
+
+            // Deleting a file's transactions is done explicitly by the service; NoAction avoids
+            // a second cascade path into Transactions alongside the Account cascade
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.ImportBatch)
+                .WithMany(b => b.Transactions)
+                .HasForeignKey(t => t.ImportBatchId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ImportBatch>()
+                .HasOne(b => b.Account)
+                .WithMany()
+                .HasForeignKey(b => b.AccountId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             ConfigureOwned<Account>(modelBuilder);
             ConfigureOwned<Category>(modelBuilder);
             ConfigureOwned<Transaction>(modelBuilder);
             ConfigureOwned<CategoryRule>(modelBuilder);
             ConfigureOwned<AgentAction>(modelBuilder);
+            ConfigureOwned<ImportBatch>(modelBuilder);
         }
 
         private void ConfigureOwned<T>(ModelBuilder modelBuilder) where T : class, IUserOwned

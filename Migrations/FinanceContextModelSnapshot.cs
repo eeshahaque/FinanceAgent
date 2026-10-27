@@ -226,6 +226,43 @@ namespace FinanceAgent.Migrations
                     b.ToTable("CategoryRules");
                 });
 
+            modelBuilder.Entity("FinanceAgent.Models.ImportBatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<DateTime>("ImportedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SkippedDuplicates")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkippedInvalid")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ImportBatches");
+                });
+
             modelBuilder.Entity("FinanceAgent.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -259,6 +296,9 @@ namespace FinanceAgent.Migrations
                     b.Property<bool>("FlaggedAsAnomaly")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("ImportBatchId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Merchant")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -273,6 +313,8 @@ namespace FinanceAgent.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ImportBatchId");
 
                     b.HasIndex("UserId");
 
@@ -454,6 +496,22 @@ namespace FinanceAgent.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("FinanceAgent.Models.ImportBatch", b =>
+                {
+                    b.HasOne("FinanceAgent.Models.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FinanceAgent.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("FinanceAgent.Models.Transaction", b =>
                 {
                     b.HasOne("FinanceAgent.Models.Account", "Account")
@@ -466,6 +524,11 @@ namespace FinanceAgent.Migrations
                         .WithMany("Transactions")
                         .HasForeignKey("CategoryId");
 
+                    b.HasOne("FinanceAgent.Models.ImportBatch", "ImportBatch")
+                        .WithMany("Transactions")
+                        .HasForeignKey("ImportBatchId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("FinanceAgent.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -474,6 +537,8 @@ namespace FinanceAgent.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("Category");
+
+                    b.Navigation("ImportBatch");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -533,6 +598,11 @@ namespace FinanceAgent.Migrations
                 });
 
             modelBuilder.Entity("FinanceAgent.Models.Category", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("FinanceAgent.Models.ImportBatch", b =>
                 {
                     b.Navigation("Transactions");
                 });

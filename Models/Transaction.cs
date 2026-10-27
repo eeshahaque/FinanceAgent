@@ -12,6 +12,10 @@ namespace FinanceAgent.Models
         public decimal Amount { get; set; }
         public string RawDescription { get; set; } = string.Empty;
 
+        // The uploaded file this row came from; null for rows imported before file history existed
+        public int? ImportBatchId { get; set; }
+        public ImportBatch? ImportBatch { get; set; }
+
         public int? CategoryId { get; set; }
         public Category? Category { get; set; }
 

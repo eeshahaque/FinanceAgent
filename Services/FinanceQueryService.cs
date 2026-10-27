@@ -17,6 +17,11 @@ public record MonthSummary(int Year, int Month, decimal Income, decimal Spending
     public string Label => new DateTime(Year, Month, 1).ToString("MMMM yyyy");
 }
 
+public record MonthFlow(DateTime Month, decimal Income, decimal Spending)
+{
+    public decimal Net => Income - Spending;
+}
+
 public record TransactionFilter(
     DateTime? From = null,
     DateTime? To = null,
@@ -78,6 +83,35 @@ public class FinanceQueryService
         return new MonthSummary(year, month, income, spends.Sum(s => s.Spent), spends);
     }
 
+    // Income and spending for each of the `count` months ending at `endMonth`, oldest first.
+    // Uses the same rules as GetMonthSummaryAsync: spending is net outflow per Expense category.
+    public async Task<List<MonthFlow>> GetCashFlowAsync(DateTime endMonth, int count)
+    {
+        var first = new DateTime(endMonth.Year, endMonth.Month, 1).AddMonths(-(count - 1));
+        var end = first.AddMonths(count);
+
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var categories = await db.Categories.AsNoTracking().ToListAsync();
+        var txns = await db.Transactions
+            .Where(t => t.Date >= first && t.Date < end)
+            .Select(t => new { t.Date, t.Amount, t.CategoryId })
+            .ToListAsync();
+
+        var kinds = categories.ToDictionary(c => c.Id, c => c.Kind);
+        CategoryKind KindOf(int? id) => id is int i && kinds.TryGetValue(i, out var k) ? k : CategoryKind.Expense;
+
+        return Enumerable.Range(0, count).Select(offset =>
+        {
+            var month = first.AddMonths(offset);
+            var inMonth = txns.Where(t => t.Date.Year == month.Year && t.Date.Month == month.Month).ToList();
+            var income = inMonth.Where(t => t.Amount > 0 && KindOf(t.CategoryId) == CategoryKind.Income).Sum(t => t.Amount);
+            var spending = inMonth.Where(t => KindOf(t.CategoryId) == CategoryKind.Expense)
+                .GroupBy(t => t.CategoryId)
+                .Sum(g => Math.Max(0, -g.Sum(t => t.Amount)));
+            return new MonthFlow(month, income, spending);
+        }).ToList();
+    }
+
     // Net spend per category per month, oldest first. Used by the budget advisor.
     public async Task<Dictionary<int, decimal[]>> GetMonthlySpendByCategoryAsync(IReadOnlyList<DateTime> months)
     {
@@ -116,6 +150,12 @@ public class FinanceQueryService
             .OrderByDescending(t => t.Date).ThenByDescending(t => t.Id)
             .Take(Math.Clamp(filter.Limit, 1, 2000))
             .ToListAsync();
+    }
+
+    public async Task<int> CountFlaggedAsync()
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.Transactions.CountAsync(t => t.FlaggedAsAnomaly && !t.AnomalyDismissed);
     }
 
     public async Task<int> CountNeedsReviewAsync()

@@ -1,149 +1,321 @@
 @page "/"
 @rendermode InteractiveServer
+@using FinanceAgent.Data
 @inject FinanceQueryService Queries
 @inject BudgetAdvisorAgent Advisor
 @inject AgentPipeline Pipeline
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>Dashboard · FinanceAgent</PageTitle>
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-    <h1 class="me-auto mb-0">Dashboard</h1>
+<div class="page-head">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="page-sub">
+            @if (months.Count > 0)
+            {
+                <span>@selectedMonth.ToString("MMMM yyyy") · @months.Count month@(months.Count == 1 ? "" : "s") of imported data</span>
+            }
+            else
+            {
+                <span>Your money at a glance, once you import a statement.</span>
+            }
+        </p>
+    </div>
     @if (months.Count > 0)
     {
-        <select class="form-select w-auto" value="@selectedMonth.ToString("yyyy-MM")" @onchange="OnMonthChanged">
-            @foreach (var m in months)
-            {
-                <option value="@m.ToString("yyyy-MM")">@m.ToString("MMMM yyyy")</option>
-            }
-        </select>
+        <div class="page-actions">
+            <label for="month" class="visually-hidden">Month</label>
+            <select id="month" class="form-select" value="@selectedMonth.ToString("yyyy-MM")" @onchange="OnMonthChanged">
+                @foreach (var m in months)
+                {
+                    <option value="@m.ToString("yyyy-MM")">@m.ToString("MMMM yyyy")</option>
+                }
+            </select>
+            <button class="btn btn-primary d-inline-flex align-items-center gap-2" @onclick="RunAgents" disabled="@running">
+                <Icon Name="zap" Size="18" />
+                @(running ? "Running agents…" : "Run agents")
+            </button>
+        </div>
     }
-    <button class="btn btn-outline-primary" @onclick="RunAgents" disabled="@running">
-        @(running ? "Agents working..." : "Run agents")
-    </button>
 </div>
 
 @if (message is not null)
 {
-    <div class="alert alert-info py-2">@message</div>
+    <div class="alert @(messageIsError ? "alert-danger" : "alert-info") toast-line py-2">
+        <Icon Name="@(messageIsError ? "alert" : "check")" Size="18" />
+        <span>@message</span>
+    </div>
 }
 
 @if (summary is null)
 {
-    <p>Loading...</p>
+    <p class="text-muted">Loading…</p>
 }
 else if (months.Count == 0)
 {
-    <div class="panel">
-        <p class="mb-2">No transactions yet.</p>
-        <a class="btn btn-primary" href="import">Import a bank CSV</a>
-    </div>
+    <section class="panel welcome">
+        <Icon Name="upload" Size="32" />
+        <h2>Import your first statement</h2>
+        <p class="text-muted mb-0">Download a CSV from your bank's website, then:</p>
+        <ol>
+            <li>Upload it on the Import page. Rows you've already imported are skipped.</li>
+            <li>The agents sort transactions into categories and flag anything unusual.</li>
+            <li>Come back here to see your month, your budgets, and what needs attention.</li>
+        </ol>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="import">Import a CSV</a>
+            <span class="text-muted small align-self-center">No statement handy? Use <code>SampleData/sample_transactions.csv</code>.</span>
+        </div>
+    </section>
 }
 else
 {
-    <div class="row g-3 mb-3">
-        <div class="col-6 col-lg-3"><div class="stat-card"><div class="label">Income</div><div class="value money pos">@summary.Income.ToString("C")</div></div></div>
-        <div class="col-6 col-lg-3"><div class="stat-card"><div class="label">Spending</div><div class="value money">@summary.Spending.ToString("C")</div></div></div>
-        <div class="col-6 col-lg-3"><div class="stat-card"><div class="label">Net</div><div class="value money @(summary.Net < 0 ? "neg" : "pos")">@summary.Net.ToString("C")</div></div></div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
-                <div class="label">Needs attention</div>
-                <div class="value">@anomalies.Count <small class="text-muted fs-6">flagged</small> · @needsReview <small class="text-muted fs-6">to review</small></div>
-            </div>
-        </div>
-    </div>
+    var prev = flows.Count >= 2 ? flows[^2] : null;
+    var expense = summary.Categories.Where(c => !c.ExcludeFromBudget).ToList();
+    var budgeted = expense.Where(c => c.Budget > 0 && c.Name != DbSeeder.Uncategorized).ToList();
+    var totalBudget = budgeted.Sum(c => c.Budget);
+    var budgetedSpent = budgeted.Sum(c => c.Spent);
+    var donut = DonutSegments(expense);
 
-    <div class="row g-3">
-        <div class="col-lg-7">
-            <div class="panel">
-                <h2>Spending vs budget — @summary.Label</h2>
-                @foreach (var c in summary.Categories.Where(c => !c.ExcludeFromBudget && (c.Spent > 0 || c.Budget > 0)).OrderByDescending(c => c.Spent))
-                {
-                    var pct = c.Budget > 0 ? Math.Min(100, c.PercentUsed * 100) : (c.Spent > 0 ? 100 : 0);
-                    var cls = c.OverBudget ? "over" : c.PercentUsed > 0.85 ? "warn" : "";
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between small">
-                            <a href="transactions?category=@c.CategoryId&month=@selectedMonth.ToString("yyyy-MM")">@c.Name</a>
-                            <span class="money">
-                                @c.Spent.ToString("C")
-                                @if (c.Budget > 0) { <span class="text-muted"> / @c.Budget.ToString("C")</span> }
-                                else { <span class="text-muted"> (no budget)</span> }
-                            </span>
-                        </div>
-                        <div class="budget-bar"><div class="@cls" style="width:@(pct.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+    <div class="dash">
+        <section class="tile tile-income" aria-label="Income">
+            <span class="tile-label">Income</span>
+            <span class="tile-value">@summary.Income.ToString("C")</span>
+            <Delta Current="summary.Income" Previous="prev?.Income" PrevMonth="prev?.Month" />
+            <AreaSpark Values="@flows.Select(f => f.Income).ToList()" Color="var(--tile-income-line)" />
+        </section>
+        <section class="tile tile-spend" aria-label="Spending">
+            <span class="tile-label">Spending</span>
+            <span class="tile-value">@summary.Spending.ToString("C")</span>
+            <Delta Current="summary.Spending" Previous="prev?.Spending" PrevMonth="prev?.Month" UpIsGood="false" />
+            <AreaSpark Values="@flows.Select(f => f.Spending).ToList()" Color="var(--tile-spend-line)" />
+        </section>
+        <section class="tile tile-net" aria-label="Net">
+            <span class="tile-label">Net</span>
+            <span class="tile-value">@summary.Net.ToString("C")</span>
+            <Delta Current="summary.Net" Previous="prev?.Net" PrevMonth="prev?.Month" />
+            <AreaSpark Values="@flows.Select(f => f.Net).ToList()" Color="var(--tile-net-line)" />
+        </section>
+
+        <section class="panel span-8">
+            <div class="panel-head">
+                <h2>Cash flow</h2>
+                <div class="legend">
+                    <span><i class="sw sw-in"></i>Income</span>
+                    <span><i class="sw sw-out"></i>Spending</span>
+                    <span class="text-muted">Net over @flows.Count months <b class="money @(flows.Sum(f => f.Net) < 0 ? "neg" : "pos")">@flows.Sum(f => f.Net).ToString("C0")</b></span>
+                </div>
+            </div>
+            <CashFlowChart Months="flows" />
+        </section>
+
+        <section class="panel span-4">
+            <div class="panel-head"><h2>Needs attention</h2></div>
+            <ul class="att-list">
+                <li>
+                    <a class="att-row tone-coral" href="transactions?flagged=true">
+                        <span class="att-icon"><Icon Name="alert" Size="18" /></span>
+                        <span class="att-text">
+                            <span class="att-title">Flagged charges</span>
+                            <span class="att-sub">@(anomalies.FirstOrDefault() is { } a ? $"{a.Merchant} · {Math.Abs(a.Amount):C}" : "Nothing unusual found")</span>
+                        </span>
+                        <span class="att-value">@anomalies.Count</span>
+                        <Icon Name="chevron-right" Size="16" Class="chev" />
+                    </a>
+                </li>
+                <li>
+                    <a class="att-row tone-amber" href="transactions?review=true">
+                        <span class="att-icon"><Icon Name="inbox" Size="18" /></span>
+                        <span class="att-text">
+                            <span class="att-title">Needs a category</span>
+                            <span class="att-sub">@(needsReview == 0 ? "Everything is categorized" : "Merchant gets remembered")</span>
+                        </span>
+                        <span class="att-value">@needsReview</span>
+                        <Icon Name="chevron-right" Size="16" Class="chev" />
+                    </a>
+                </li>
+                <li>
+                    <a class="att-row tone-violet" href="budgets">
+                        <span class="att-icon"><Icon Name="gauge" Size="18" /></span>
+                        <span class="att-text">
+                            <span class="att-title">Budget alerts</span>
+                            <span class="att-sub">@(alerts.FirstOrDefault()?.Message ?? $"On track for {months[0]:MMMM}")</span>
+                        </span>
+                        <span class="att-value">@alerts.Count</span>
+                        <Icon Name="chevron-right" Size="16" Class="chev" />
+                    </a>
+                </li>
+                <li>
+                    <a class="att-row tone-mint" href="budgets">
+                        <span class="att-icon"><Icon Name="bulb" Size="18" /></span>
+                        <span class="att-text">
+                            <span class="att-title">Budget suggestions</span>
+                            <span class="att-sub">@(suggestions.Count == 0 ? "Budgets match your spending" : $"{suggestions[0].CategoryName}: {suggestions[0].CurrentBudget:C0} → {suggestions[0].SuggestedBudget:C0}")</span>
+                        </span>
+                        <span class="att-value">@suggestions.Count</span>
+                        <Icon Name="chevron-right" Size="16" Class="chev" />
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="panel span-4">
+            <div class="panel-head">
+                <h2>Budget this month</h2>
+                <a href="budgets">Edit budgets</a>
+            </div>
+            @if (totalBudget == 0)
+            {
+                <div class="empty">
+                    <span>No budgets set yet.</span>
+                    <a class="btn btn-sm btn-outline-secondary" href="budgets">Set budgets</a>
+                </div>
+            }
+            else
+            {
+                var used = budgetedSpent / totalBudget;
+                <div class="ring-wrap mb-3">
+                    <div class="ring-center">
+                        <Donut Label="@($"{used:P0} of budget used")"
+                               Segments="@(new[] { new Donut.Segment("Spent", Math.Min(budgetedSpent, totalBudget), used > 1 ? "var(--coral)" : used > 0.85m ? "var(--amber)" : "var(--accent)"), new Donut.Segment("Left", Math.Max(0, totalBudget - budgetedSpent), "transparent") })" />
+                        <span class="ring-label">
+                            <span class="ring-value">@used.ToString("P0")</span>
+                            <span class="ring-caption">used</span>
+                        </span>
                     </div>
-                }
-            </div>
-        </div>
-
-        <div class="col-lg-5">
-            <div class="panel">
-                <h2>Budget alerts</h2>
-                @if (alerts.Count == 0)
-                {
-                    <p class="text-muted mb-0">Every category is on track for @months[0].ToString("MMMM").</p>
-                }
-                <ul class="mb-0 ps-3">
-                    @foreach (var a in alerts)
+                    <div>
+                        <div class="money fs-5 fw-bold">@budgetedSpent.ToString("C0")</div>
+                        <div class="text-muted small">of @totalBudget.ToString("C0") across @budgeted.Count budgeted categories</div>
+                    </div>
+                </div>
+                <div class="bar-list">
+                    @foreach (var c in budgeted.OrderByDescending(c => c.PercentUsed).Take(4))
                     {
-                        <li>@a.Message</li>
-                    }
-                </ul>
-            </div>
-
-            <div class="panel">
-                <h2>Flagged transactions</h2>
-                @if (anomalies.Count == 0)
-                {
-                    <p class="text-muted mb-0">Nothing unusual found.</p>
-                }
-                @foreach (var t in anomalies.Take(5))
-                {
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between">
-                            <span>@t.Date.ToString("MMM d") · @t.Merchant</span>
-                            <span class="money neg">@t.Amount.ToString("C")</span>
+                        var pct = Math.Min(100, c.PercentUsed * 100);
+                        <div class="bar-row">
+                            <div class="bar-top">
+                                <a href="transactions?category=@c.CategoryId&month=@selectedMonth.ToString("yyyy-MM")">@c.Name</a>
+                                <span class="money @(c.OverBudget ? "neg" : "")">@c.Spent.ToString("C0") <span class="text-muted">/ @c.Budget.ToString("C0")</span></span>
+                            </div>
+                            <div class="budget-bar"><div class="@(c.OverBudget ? "over" : c.PercentUsed > 0.85 ? "warn" : "")" style="width:@(pct.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
                         </div>
-                        <div class="flag">@t.AnomalyReason</div>
-                    </div>
-                }
-                @if (anomalies.Count > 5)
-                {
-                    <a href="transactions?flagged=true">See all @anomalies.Count</a>
-                }
-            </div>
+                    }
+                </div>
+            }
+        </section>
 
-            <div class="panel">
-                <h2>Suggested budget changes</h2>
-                @if (suggestions.Count == 0)
+        <section class="panel span-4">
+            <div class="panel-head"><h2>Where it went</h2></div>
+            @if (donut.Count == 0)
+            {
+                <div class="empty"><span>No spending in @selectedMonth.ToString("MMMM").</span></div>
+            }
+            else
+            {
+                <div class="ring-wrap">
+                    <div class="ring-center">
+                        <Donut Segments="donut" Label="@($"Spending by category, {selectedMonth:MMMM yyyy}")" />
+                        <span class="ring-label">
+                            <span class="ring-value">@ChartMath.Compact((double)summary.Spending)</span>
+                            <span class="ring-caption">spent</span>
+                        </span>
+                    </div>
+                    <ul class="cat-legend">
+                        @foreach (var s in donut)
+                        {
+                            <li><i class="sw" style="background:@s.Color"></i><span class="name">@s.Name</span><span class="money">@s.Value.ToString("C0")</span></li>
+                        }
+                    </ul>
+                </div>
+            }
+        </section>
+
+        <section class="panel span-4">
+            <div class="panel-head">
+                <h2>Recent transactions</h2>
+                <a href="transactions?month=@selectedMonth.ToString("yyyy-MM")">View all</a>
+            </div>
+            @if (recent.Count == 0)
+            {
+                <div class="empty"><span>No transactions in @selectedMonth.ToString("MMMM").</span></div>
+            }
+            <ul class="txn-list">
+                @foreach (var t in recent)
                 {
-                    <p class="text-muted mb-0">Your budgets match your recent spending.</p>
+                    <li class="txn-row">
+                        <div class="txn-main">
+                            <div class="txn-name">@t.Merchant</div>
+                            <div class="txn-meta">@t.Date.ToString("MMM d") · @(t.Category?.Name ?? DbSeeder.Uncategorized)</div>
+                        </div>
+                        <span class="money @(t.Amount < 0 ? "neg" : "pos")">@t.Amount.ToString("C")</span>
+                    </li>
                 }
-                @foreach (var s in suggestions.Take(3))
+            </ul>
+        </section>
+
+        <section class="panel span-6">
+            <div class="panel-head">
+                <h2>Flagged charges</h2>
+                @if (anomalies.Count > 0) { <a href="transactions?flagged=true">Review all @anomalies.Count</a> }
+            </div>
+            @if (anomalies.Count == 0)
+            {
+                <div class="empty"><Icon Name="check" /><span>Nothing unusual found. The anomaly agent checks for duplicate charges, price changes, and unusual amounts.</span></div>
+            }
+            <ul class="txn-list">
+                @foreach (var t in anomalies.Take(4))
                 {
-                    <div class="mb-2">
-                        <strong>@s.CategoryName</strong>: @s.CurrentBudget.ToString("C") → @s.SuggestedBudget.ToString("C")
+                    <li class="txn-row">
+                        <div class="txn-main">
+                            <div class="txn-name">@t.Merchant <span class="txn-meta">· @t.Date.ToString("MMM d")</span></div>
+                            <div class="flag"><Icon Name="alert" Size="14" /><span>@t.AnomalyReason</span></div>
+                        </div>
+                        <span class="money neg">@t.Amount.ToString("C")</span>
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <section class="panel span-6">
+            <div class="panel-head">
+                <h2>Suggested budget changes</h2>
+                @if (suggestions.Count > 0) { <a href="budgets">Review on Budgets</a> }
+            </div>
+            @if (suggestions.Count == 0)
+            {
+                <div class="empty"><Icon Name="check" /><span>Your budgets match your recent spending.</span></div>
+            }
+            @foreach (var s in suggestions.Take(3))
+            {
+                <div class="suggest">
+                    <Icon Name="bulb" Size="18" />
+                    <div>
+                        <div><strong>@s.CategoryName</strong> <span class="money">@s.CurrentBudget.ToString("C0")<span class="arrow">→</span><strong>@s.SuggestedBudget.ToString("C0")</strong></span></div>
                         <div class="small text-muted">@s.Reason</div>
                     </div>
-                }
-                @if (suggestions.Count > 0)
-                {
-                    <a href="budgets">Review on the Budgets page</a>
-                }
-            </div>
-        </div>
+                </div>
+            }
+        </section>
     </div>
 }
 
 @code {
+    private const int FlowMonths = 6;
+
+    private static readonly string[] Palette = { "#8b7bff", "#4fd6a5", "#ff9a6b", "#5fb6ff", "#f27fc3", "#ffc857" };
+
     private List<DateTime> months = new();
     private DateTime selectedMonth;
     private MonthSummary? summary;
+    private List<MonthFlow> flows = new();
     private List<Transaction> anomalies = new();
+    private List<Transaction> recent = new();
     private List<BudgetSuggestion> suggestions = new();
     private List<PaceAlert> alerts = new();
     private int needsReview;
     private bool running;
     private string? message;
+    private bool messageIsError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,11 +328,24 @@ else
         if (resetMonth || !months.Contains(selectedMonth))
             selectedMonth = months.FirstOrDefault(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1));
 
-        summary = await Queries.GetMonthSummaryAsync(selectedMonth.Year, selectedMonth.Month);
+        await LoadMonthAsync();
         anomalies = await Queries.GetTransactionsAsync(new TransactionFilter(FlaggedOnly: true, Limit: 100));
         needsReview = await Queries.CountNeedsReviewAsync();
         suggestions = await Advisor.GetSuggestionsAsync();
         alerts = await Advisor.GetPaceAlertsAsync();
+    }
+
+    private async Task LoadMonthAsync()
+    {
+        summary = await Queries.GetMonthSummaryAsync(selectedMonth.Year, selectedMonth.Month);
+        flows = await Queries.GetCashFlowAsync(selectedMonth, FlowMonths);
+
+        // Trim leading months from before the first import so the chart starts where the data does
+        var earliest = months.Count > 0 ? months.Min() : selectedMonth;
+        flows = flows.Where(f => f.Month >= earliest).ToList();
+
+        recent = await Queries.GetTransactionsAsync(new TransactionFilter(
+            From: selectedMonth, To: selectedMonth.AddMonths(1).AddDays(-1), Limit: 6));
     }
 
     private async Task OnMonthChanged(ChangeEventArgs e)
@@ -168,7 +353,7 @@ else
         if (DateTime.TryParse($"{e.Value}-01", out var month))
         {
             selectedMonth = month;
-            summary = await Queries.GetMonthSummaryAsync(month.Year, month.Month);
+            await LoadMonthAsync();
         }
     }
 
@@ -179,16 +364,28 @@ else
         try
         {
             var r = await Pipeline.RunAsync();
-            message = $"Rules categorized {r.RuleMatched} transactions, {r.AnomaliesFlagged} new anomalies flagged.";
+            message = $"Rules categorized {r.RuleMatched} transaction{(r.RuleMatched == 1 ? "" : "s")} and the anomaly scan flagged {r.AnomaliesFlagged} new.";
+            messageIsError = false;
             await LoadAsync(resetMonth: false);
         }
         catch (Exception ex)
         {
-            message = $"Error: {ex.Message}";
+            message = $"The agents couldn't finish: {ex.Message}";
+            messageIsError = true;
         }
         finally
         {
             running = false;
         }
+    }
+
+    // Top five categories by spend, the rest folded into "Other"
+    private static List<Donut.Segment> DonutSegments(List<CategorySpend> expense)
+    {
+        var spent = expense.Where(c => c.Spent > 0).OrderByDescending(c => c.Spent).ToList();
+        var segments = spent.Take(5).Select((c, i) => new Donut.Segment(c.Name, c.Spent, Palette[i])).ToList();
+        var rest = spent.Skip(5).Sum(c => c.Spent);
+        if (rest > 0) segments.Add(new Donut.Segment("Other", rest, "#7d78b8"));
+        return segments;
     }
 }

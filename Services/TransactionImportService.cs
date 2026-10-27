@@ -45,8 +45,11 @@ public class TransactionImportService
             throw new InvalidOperationException("The file is empty.");
         var headers = csv.HeaderRecord ?? Array.Empty<string>();
 
-        int Find(string[] names) => Array.FindIndex(headers, h =>
-            names.Any(n => n.Equals(h.Trim(), StringComparison.OrdinalIgnoreCase)));
+        // Names are tried in priority order, so Chase's leading "Details" column (DEBIT/CREDIT)
+        // loses to its "Description" column
+        int Find(string[] names) => names
+            .Select(n => Array.FindIndex(headers, h => n.Equals(h.Trim(), StringComparison.OrdinalIgnoreCase)))
+            .FirstOrDefault(i => i >= 0, -1);
 
         var dateCol = Find(DateHeaders);
         var descCol = Find(DescriptionHeaders);
@@ -198,7 +201,19 @@ public class TransactionImportService
     {
         var words = rawDescription.Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Where(w => !w.StartsWith('#') && !w.All(char.IsDigit))
+            .Select(StripReferenceCode)
             .ToArray();
         return string.Join(" ", words.Take(Math.Min(3, words.Length))).Trim();
+    }
+
+    // Card descriptors often append a per-order code after '*' ("AMAZON.COM*2K4LM0"). Dropping it
+    // keeps every order from the same merchant under one name, which the anomaly checks rely on.
+    // Codes are told apart from names by containing a digit, so "DOORDASH*MAMAS" stays intact.
+    private static string StripReferenceCode(string word)
+    {
+        var star = word.IndexOf('*');
+        if (star <= 0) return word;
+        var code = word[(star + 1)..];
+        return code.Length >= 4 && code.Any(char.IsDigit) ? word[..star] : word;
     }
 }

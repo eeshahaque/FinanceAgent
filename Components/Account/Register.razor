@@ -8,11 +8,13 @@
 @inject IDbContextFactory<FinanceContext> DbFactory
 @inject NavigationManager Navigation
 @inject ILogger<Register> Logger
+@layout FinanceAgent.Components.Layout.AuthLayout
 
 <PageTitle>Create account</PageTitle>
 
 <div class="auth-card">
-    <h1>Create account</h1>
+    <h1>Create your account</h1>
+    <p class="auth-sub">Your data is private to your account.</p>
 
     @if (errors.Count > 0)
     {

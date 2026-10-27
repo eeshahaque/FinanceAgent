@@ -2,21 +2,26 @@
 @rendermode InteractiveServer
 @inject FinanceQueryService Queries
 
-<PageTitle>Agent Activity</PageTitle>
+<PageTitle>Agent Activity · FinanceAgent</PageTitle>
 
-<h1>Agent Activity</h1>
-<p class="text-muted">Every decision an agent made, and why. Useful for auditing what changed in your data.</p>
-
-<div class="d-flex gap-2 mb-3">
-    <select class="form-select w-auto" value="@agent" @onchange="async e => { agent = e.Value?.ToString(); await LoadAsync(); }">
+<div class="page-head">
+    <div>
+        <h1>Agent Activity</h1>
+        <p class="page-sub">Every change the agents or you made to your data, and the reason for it.</p>
+    </div>
+    <div class="page-actions">
+    <label for="agent-filter" class="visually-hidden">Filter by agent</label>
+    <select id="agent-filter" class="form-select w-auto" value="@agent" @onchange="async e => { agent = e.Value?.ToString(); await LoadAsync(); }">
         <option value="">All agents</option>
         @foreach (var name in AgentNames)
         {
             <option value="@name">@name</option>
         }
     </select>
+    </div>
 </div>
 
+<div class="panel">
 <div class="table-responsive">
     <table class="table table-sm">
         <thead>
@@ -28,7 +33,7 @@
                 <tr>
                     <td class="text-nowrap small">@a.Timestamp.ToString("yyyy-MM-dd HH:mm")</td>
                     <td class="small">@a.AgentName</td>
-                    <td><span class="badge text-bg-light">@a.ActionType</span></td>
+                    <td><span class="tag">@a.ActionType</span></td>
                     <td class="small">@a.Input</td>
                     <td class="small">@a.Output</td>
                     <td class="small text-muted">@a.Reasoning</td>
@@ -36,6 +41,7 @@
             }
         </tbody>
     </table>
+</div>
 </div>
 
 @code {

@@ -4,11 +4,13 @@
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
+@layout FinanceAgent.Components.Layout.AuthLayout
 
 <PageTitle>Log in</PageTitle>
 
 <div class="auth-card">
-    <h1>Log in</h1>
+    <h1>Welcome back</h1>
+    <p class="auth-sub">Log in to your FinanceAgent workspace.</p>
 
     @if (errorMessage is not null)
     {

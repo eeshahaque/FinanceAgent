@@ -1,0 +1,33 @@
+@* Ring chart: each segment is a stroked circle offset along the circumference *@
+<svg class="donut" viewBox="0 0 120 120" role="img" aria-label="@Label">
+    <circle cx="60" cy="60" r="@R" class="donut-track" />
+    @{
+        double offset = 0;
+        var total = Segments.Sum(s => (double)s.Value);
+    }
+    @if (total > 0)
+    {
+        @foreach (var s in Segments)
+        {
+            var len = (double)s.Value / total * C;
+            // Small gap between segments; skipped when one segment fills the ring
+            var gap = Segments.Count(x => x.Value > 0) > 1 ? Math.Min(2.2, len * 0.4) : 0;
+            <circle cx="60" cy="60" r="@R" class="donut-seg" stroke="@s.Color"
+                    stroke-dasharray="@($"{ChartMath.F(Math.Max(0, len - gap))} {ChartMath.F(C)}")"
+                    stroke-dashoffset="@ChartMath.F(-offset)" transform="rotate(-90 60 60)">
+                <title>@s.Name: @s.Value.ToString("C0")</title>
+            </circle>
+            offset += len;
+        }
+    }
+</svg>
+
+@code {
+    public record Segment(string Name, decimal Value, string Color);
+
+    private const double R = 48;
+    private static readonly double C = 2 * Math.PI * R;
+
+    [Parameter, EditorRequired] public IReadOnlyList<Segment> Segments { get; set; } = Array.Empty<Segment>();
+    [Parameter] public string Label { get; set; } = "";
+}

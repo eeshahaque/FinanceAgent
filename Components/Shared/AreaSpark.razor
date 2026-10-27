@@ -1,0 +1,30 @@
+@* Small area chart of a value's recent history, drawn edge to edge at the bottom of a tile *@
+@if (Values.Count > 0)
+{
+    var min = (double)Math.Min(0, Values.Min());
+    var max = Math.Max((double)Values.Max(), min + 1);
+    var pts = Values.Count == 1
+        ? new List<(double, double)> { (0, Y(Values[0], min, max)), (W, Y(Values[0], min, max)) }
+        : Values.Select((v, i) => ((double)i * W / (Values.Count - 1), Y(v, min, max))).ToList();
+    <svg class="spark" viewBox="0 0 @W @H" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="@id" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="@Color" stop-opacity=".55" />
+                <stop offset="1" stop-color="@Color" stop-opacity=".08" />
+            </linearGradient>
+        </defs>
+        <path d="@ChartMath.SmoothArea(pts, H, 2)" fill="url(#@id)" />
+        <path d="@ChartMath.SmoothLine(pts, 2, H)" fill="none" stroke="@Color" stroke-width="2" vector-effect="non-scaling-stroke" />
+    </svg>
+}
+
+@code {
+    private const double W = 200, H = 56;
+    private readonly string id = "spark-" + Guid.NewGuid().ToString("N")[..8];
+
+    [Parameter, EditorRequired] public IReadOnlyList<decimal> Values { get; set; } = Array.Empty<decimal>();
+    [Parameter] public string Color { get; set; } = "#8b7bff";
+
+    // Leaves headroom so the peak doesn't touch the tile's text
+    private static double Y(decimal v, double min, double max) => H - 4 - ((double)v - min) / (max - min) * (H - 18);
+}

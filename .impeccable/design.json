@@ -1,0 +1,768 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T02:17:44+00:00",
+  "title": "Design System: FinanceAgent",
+  "extensions": {
+    "colorMeta": {
+      "bg-0": {
+        "role": "neutral",
+        "displayName": "Midnight Indigo",
+        "canonical": "#110d36",
+        "oklch": "oklch(19.6% 0.077 281)",
+        "tonalRamp": [
+          "oklch(15% 0.072 281)",
+          "oklch(25% 0.072 281)",
+          "oklch(35% 0.062 281)",
+          "oklch(48% 0.050 281)",
+          "oklch(60% 0.038 281)",
+          "oklch(72% 0.026 281)",
+          "oklch(84% 0.019 281)",
+          "oklch(95% 0.019 281)"
+        ]
+      },
+      "bg-1": {
+        "role": "neutral",
+        "displayName": "Dusk Indigo",
+        "canonical": "#1c1752",
+        "oklch": "oklch(25.4% 0.103 280)",
+        "tonalRamp": [
+          "oklch(15% 0.090 280)",
+          "oklch(25% 0.103 280)",
+          "oklch(35% 0.091 280)",
+          "oklch(48% 0.074 280)",
+          "oklch(60% 0.059 280)",
+          "oklch(72% 0.043 280)",
+          "oklch(84% 0.028 280)",
+          "oklch(95% 0.026 280)"
+        ]
+      },
+      "surface-solid": {
+        "role": "neutral",
+        "displayName": "Solid Indigo",
+        "canonical": "#1d1950",
+        "oklch": "oklch(25.7% 0.097 280)",
+        "tonalRamp": [
+          "oklch(15% 0.084 280)",
+          "oklch(25% 0.096 280)",
+          "oklch(35% 0.086 280)",
+          "oklch(48% 0.070 280)",
+          "oklch(60% 0.055 280)",
+          "oklch(72% 0.041 280)",
+          "oklch(84% 0.026 280)",
+          "oklch(95% 0.024 280)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Starlight",
+        "canonical": "#f2f0ff",
+        "oklch": "oklch(96.1% 0.020 292)",
+        "tonalRamp": [
+          "oklch(15% 0.005 292)",
+          "oklch(25% 0.005 292)",
+          "oklch(35% 0.005 292)",
+          "oklch(48% 0.008 292)",
+          "oklch(60% 0.011 292)",
+          "oklch(72% 0.014 292)",
+          "oklch(84% 0.017 292)",
+          "oklch(95% 0.020 292)"
+        ]
+      },
+      "text-2": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#c3bfeb",
+        "oklch": "oklch(82.2% 0.061 289)",
+        "tonalRamp": [
+          "oklch(15% 0.015 289)",
+          "oklch(25% 0.017 289)",
+          "oklch(35% 0.025 289)",
+          "oklch(48% 0.035 289)",
+          "oklch(60% 0.044 289)",
+          "oklch(72% 0.054 289)",
+          "oklch(84% 0.060 289)",
+          "oklch(95% 0.052 289)"
+        ]
+      },
+      "text-3": {
+        "role": "neutral",
+        "displayName": "Dim Mist",
+        "canonical": "#9a95cf",
+        "oklch": "oklch(69.6% 0.084 288)",
+        "tonalRamp": [
+          "oklch(15% 0.027 288)",
+          "oklch(25% 0.037 288)",
+          "oklch(35% 0.048 288)",
+          "oklch(48% 0.062 288)",
+          "oklch(60% 0.074 288)",
+          "oklch(72% 0.082 288)",
+          "oklch(84% 0.069 288)",
+          "oklch(95% 0.058 288)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Lavender Glow",
+        "canonical": "#8b7bff",
+        "oklch": "oklch(66.1% 0.189 286)",
+        "tonalRamp": [
+          "oklch(15% 0.068 286)",
+          "oklch(25% 0.092 286)",
+          "oklch(35% 0.116 286)",
+          "oklch(48% 0.146 286)",
+          "oklch(60% 0.175 286)",
+          "oklch(72% 0.175 286)",
+          "oklch(84% 0.147 286)",
+          "oklch(95% 0.121 286)"
+        ]
+      },
+      "accent-2": {
+        "role": "primary",
+        "displayName": "Pale Lavender",
+        "canonical": "#a99cff",
+        "oklch": "oklch(74.4% 0.141 289)",
+        "tonalRamp": [
+          "oklch(15% 0.036 289)",
+          "oklch(25% 0.054 289)",
+          "oklch(35% 0.071 289)",
+          "oklch(48% 0.094 289)",
+          "oklch(60% 0.115 289)",
+          "oklch(72% 0.137 289)",
+          "oklch(84% 0.124 289)",
+          "oklch(95% 0.104 289)"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Ultraviolet Signal",
+        "canonical": "#6d5cf2",
+        "oklch": "oklch(57.7% 0.216 282)",
+        "tonalRamp": [
+          "oklch(15% 0.101 282)",
+          "oklch(25% 0.128 282)",
+          "oklch(35% 0.155 282)",
+          "oklch(48% 0.190 282)",
+          "oklch(60% 0.210 282)",
+          "oklch(72% 0.177 282)",
+          "oklch(84% 0.145 282)",
+          "oklch(95% 0.115 282)"
+        ]
+      },
+      "link": {
+        "role": "primary",
+        "displayName": "Moonlit Link",
+        "canonical": "#b9afff",
+        "oklch": "oklch(79.2% 0.113 289)",
+        "tonalRamp": [
+          "oklch(15% 0.028 289)",
+          "oklch(25% 0.036 289)",
+          "oklch(35% 0.050 289)",
+          "oklch(48% 0.069 289)",
+          "oklch(60% 0.086 289)",
+          "oklch(72% 0.102 289)",
+          "oklch(84% 0.106 289)",
+          "oklch(95% 0.090 289)"
+        ]
+      },
+      "mint": {
+        "role": "secondary",
+        "displayName": "Ledger Mint",
+        "canonical": "#4fd6a5",
+        "oklch": "oklch(79.0% 0.138 165)",
+        "tonalRamp": [
+          "oklch(15% 0.034 165)",
+          "oklch(25% 0.045 165)",
+          "oklch(35% 0.062 165)",
+          "oklch(48% 0.084 165)",
+          "oklch(60% 0.105 165)",
+          "oklch(72% 0.126 165)",
+          "oklch(84% 0.129 165)",
+          "oklch(95% 0.110 165)"
+        ]
+      },
+      "coral": {
+        "role": "tertiary",
+        "displayName": "Flag Coral",
+        "canonical": "#ff7f8c",
+        "oklch": "oklch(74.6% 0.156 15)",
+        "tonalRamp": [
+          "oklch(15% 0.040 15)",
+          "oklch(25% 0.059 15)",
+          "oklch(35% 0.079 15)",
+          "oklch(48% 0.104 15)",
+          "oklch(60% 0.127 15)",
+          "oklch(72% 0.151 15)",
+          "oklch(84% 0.137 15)",
+          "oklch(95% 0.116 15)"
+        ]
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "canonical": "#ffc46b",
+        "oklch": "oklch(85.6% 0.126 76)",
+        "tonalRamp": [
+          "oklch(15% 0.031 76)",
+          "oklch(25% 0.031 76)",
+          "oklch(35% 0.046 76)",
+          "oklch(48% 0.067 76)",
+          "oklch(60% 0.086 76)",
+          "oklch(72% 0.105 76)",
+          "oklch(84% 0.123 76)",
+          "oklch(95% 0.111 76)"
+        ]
+      },
+      "series-income": {
+        "role": "secondary",
+        "displayName": "Income Series",
+        "canonical": "#4fd6a5",
+        "oklch": "oklch(79.0% 0.138 165)",
+        "tonalRamp": [
+          "oklch(15% 0.034 165)",
+          "oklch(25% 0.045 165)",
+          "oklch(35% 0.062 165)",
+          "oklch(48% 0.084 165)",
+          "oklch(60% 0.105 165)",
+          "oklch(72% 0.126 165)",
+          "oklch(84% 0.129 165)",
+          "oklch(95% 0.110 165)"
+        ]
+      },
+      "series-spend": {
+        "role": "tertiary",
+        "displayName": "Spend Apricot",
+        "canonical": "#ff9a6b",
+        "oklch": "oklch(78.1% 0.136 45)",
+        "tonalRamp": [
+          "oklch(15% 0.034 45)",
+          "oklch(25% 0.046 45)",
+          "oklch(35% 0.063 45)",
+          "oklch(48% 0.085 45)",
+          "oklch(60% 0.105 45)",
+          "oklch(72% 0.126 45)",
+          "oklch(84% 0.126 45)",
+          "oklch(95% 0.107 45)"
+        ]
+      },
+      "tile-income-a": {
+        "role": "tile",
+        "displayName": "Income Tile Light",
+        "canonical": "#e2faf0",
+        "oklch": "oklch(96.5% 0.028 169)",
+        "tonalRamp": [
+          "oklch(15% 0.007 169)",
+          "oklch(25% 0.007 169)",
+          "oklch(35% 0.007 169)",
+          "oklch(48% 0.011 169)",
+          "oklch(60% 0.015 169)",
+          "oklch(72% 0.020 169)",
+          "oklch(84% 0.024 169)",
+          "oklch(95% 0.028 169)"
+        ]
+      },
+      "tile-income-b": {
+        "role": "tile",
+        "displayName": "Income Tile Deep",
+        "canonical": "#b8eed8",
+        "oklch": "oklch(90.6% 0.063 168)",
+        "tonalRamp": [
+          "oklch(15% 0.016 168)",
+          "oklch(25% 0.016 168)",
+          "oklch(35% 0.019 168)",
+          "oklch(48% 0.029 168)",
+          "oklch(60% 0.039 168)",
+          "oklch(72% 0.048 168)",
+          "oklch(84% 0.058 168)",
+          "oklch(95% 0.059 168)"
+        ]
+      },
+      "tile-income-ink": {
+        "role": "tile",
+        "displayName": "Income Ink",
+        "canonical": "#0e3527",
+        "oklch": "oklch(29.7% 0.051 166)",
+        "tonalRamp": [
+          "oklch(15% 0.042 166)",
+          "oklch(25% 0.048 166)",
+          "oklch(35% 0.047 166)",
+          "oklch(48% 0.039 166)",
+          "oklch(60% 0.032 166)",
+          "oklch(72% 0.024 166)",
+          "oklch(84% 0.016 166)",
+          "oklch(95% 0.013 166)"
+        ]
+      },
+      "tile-income-line": {
+        "role": "tile",
+        "displayName": "Income Spark",
+        "canonical": "#22a877",
+        "oklch": "oklch(65.1% 0.133 163)",
+        "tonalRamp": [
+          "oklch(15% 0.050 163)",
+          "oklch(25% 0.066 163)",
+          "oklch(35% 0.083 163)",
+          "oklch(48% 0.104 163)",
+          "oklch(60% 0.124 163)",
+          "oklch(72% 0.121 163)",
+          "oklch(84% 0.101 163)",
+          "oklch(95% 0.083 163)"
+        ]
+      },
+      "tile-spend-a": {
+        "role": "tile",
+        "displayName": "Spend Tile Light",
+        "canonical": "#fff0e7",
+        "oklch": "oklch(96.5% 0.020 53)",
+        "tonalRamp": [
+          "oklch(15% 0.005 53)",
+          "oklch(25% 0.005 53)",
+          "oklch(35% 0.005 53)",
+          "oklch(48% 0.008 53)",
+          "oklch(60% 0.011 53)",
+          "oklch(72% 0.014 53)",
+          "oklch(84% 0.017 53)",
+          "oklch(95% 0.020 53)"
+        ]
+      },
+      "tile-spend-b": {
+        "role": "tile",
+        "displayName": "Spend Tile Deep",
+        "canonical": "#ffcfb6",
+        "oklch": "oklch(89.0% 0.064 49)",
+        "tonalRamp": [
+          "oklch(15% 0.016 49)",
+          "oklch(25% 0.016 49)",
+          "oklch(35% 0.021 49)",
+          "oklch(48% 0.031 49)",
+          "oklch(60% 0.041 49)",
+          "oklch(72% 0.050 49)",
+          "oklch(84% 0.060 49)",
+          "oklch(95% 0.059 49)"
+        ]
+      },
+      "tile-spend-ink": {
+        "role": "tile",
+        "displayName": "Spend Ink",
+        "canonical": "#4a1d0c",
+        "oklch": "oklch(29.4% 0.074 40)",
+        "tonalRamp": [
+          "oklch(15% 0.061 40)",
+          "oklch(25% 0.070 40)",
+          "oklch(35% 0.069 40)",
+          "oklch(48% 0.057 40)",
+          "oklch(60% 0.046 40)",
+          "oklch(72% 0.035 40)",
+          "oklch(84% 0.023 40)",
+          "oklch(95% 0.018 40)"
+        ]
+      },
+      "tile-spend-line": {
+        "role": "tile",
+        "displayName": "Spend Spark",
+        "canonical": "#f0763a",
+        "oklch": "oklch(69.9% 0.167 45)",
+        "tonalRamp": [
+          "oklch(15% 0.052 45)",
+          "oklch(25% 0.073 45)",
+          "oklch(35% 0.094 45)",
+          "oklch(48% 0.121 45)",
+          "oklch(60% 0.146 45)",
+          "oklch(72% 0.163 45)",
+          "oklch(84% 0.138 45)",
+          "oklch(95% 0.115 45)"
+        ]
+      },
+      "tile-net-a": {
+        "role": "tile",
+        "displayName": "Net Tile Light",
+        "canonical": "#e9ebff",
+        "oklch": "oklch(94.4% 0.027 281)",
+        "tonalRamp": [
+          "oklch(15% 0.007 281)",
+          "oklch(25% 0.007 281)",
+          "oklch(35% 0.007 281)",
+          "oklch(48% 0.011 281)",
+          "oklch(60% 0.015 281)",
+          "oklch(72% 0.019 281)",
+          "oklch(84% 0.023 281)",
+          "oklch(95% 0.027 281)"
+        ]
+      },
+      "tile-net-b": {
+        "role": "tile",
+        "displayName": "Net Tile Deep",
+        "canonical": "#c6ccff",
+        "oklch": "oklch(85.8% 0.071 280)",
+        "tonalRamp": [
+          "oklch(15% 0.018 280)",
+          "oklch(25% 0.018 280)",
+          "oklch(35% 0.026 280)",
+          "oklch(48% 0.038 280)",
+          "oklch(60% 0.048 280)",
+          "oklch(72% 0.059 280)",
+          "oklch(84% 0.070 280)",
+          "oklch(95% 0.063 280)"
+        ]
+      },
+      "tile-net-ink": {
+        "role": "tile",
+        "displayName": "Net Ink",
+        "canonical": "#1b2160",
+        "oklch": "oklch(28.7% 0.111 273)",
+        "tonalRamp": [
+          "oklch(15% 0.092 273)",
+          "oklch(25% 0.105 273)",
+          "oklch(35% 0.102 273)",
+          "oklch(48% 0.084 273)",
+          "oklch(60% 0.067 273)",
+          "oklch(72% 0.051 273)",
+          "oklch(84% 0.034 273)",
+          "oklch(95% 0.028 273)"
+        ]
+      },
+      "tile-net-line": {
+        "role": "tile",
+        "displayName": "Net Spark",
+        "canonical": "#5465f0",
+        "oklch": "oklch(57.4% 0.208 273)",
+        "tonalRamp": [
+          "oklch(15% 0.098 273)",
+          "oklch(25% 0.124 273)",
+          "oklch(35% 0.150 273)",
+          "oklch(48% 0.183 273)",
+          "oklch(60% 0.201 273)",
+          "oklch(72% 0.170 273)",
+          "oklch(84% 0.138 273)",
+          "oklch(95% 0.110 273)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Glass",
+        "canonical": "rgba(255, 255, 255, .055)",
+        "tonalRamp": []
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Glass Raised",
+        "canonical": "rgba(255, 255, 255, .09)",
+        "tonalRamp": []
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Haze Border",
+        "canonical": "rgba(206, 200, 255, .14)",
+        "tonalRamp": []
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Haze Border Strong",
+        "canonical": "rgba(206, 200, 255, .26)",
+        "tonalRamp": []
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Sign-in intro headline only, balanced, max 14ch."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "KPI tile values; donut centre value at 1.45rem in the same voice."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles in the page head (1.5rem under 760px); auth card title at 1.6rem."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose and page subtitles (subtitles in Mist, max 68ch)."
+      },
+      "body-strong": {
+        "displayName": "Body Strong",
+        "purpose": "Row titles, merchant names, tile labels."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Row metadata, axis ticks, legends, captions in Dim Mist."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase table column headers only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel-pool",
+        "value": "0 18px 40px -18px rgba(3, 2, 20, .75), 0 2px 6px rgba(3, 2, 20, .35)",
+        "purpose": "Panels, KPI tiles, nav panel."
+      },
+      {
+        "name": "readout-float",
+        "value": "0 18px 36px -12px rgba(3, 2, 20, .8)",
+        "purpose": "Cash-flow hover readout."
+      },
+      {
+        "name": "card-lift",
+        "value": "0 30px 60px -24px rgba(3, 2, 20, .9)",
+        "purpose": "Auth card standing alone on the ground."
+      },
+      {
+        "name": "primary-glow",
+        "value": "0 8px 20px -8px rgba(109, 92, 242, .9)",
+        "purpose": "Primary buttons."
+      },
+      {
+        "name": "nav-active-glow",
+        "value": "0 6px 18px rgba(64, 40, 190, .35)",
+        "purpose": "Active sidebar item."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px rgba(139, 123, 255, .25)",
+        "purpose": "Input and checkbox focus; .35 alpha on buttons."
+      }
+    ],
+    "glass": [
+      {
+        "name": "panel",
+        "value": "backdrop-filter: blur(16px)",
+        "purpose": "Panels."
+      },
+      {
+        "name": "nav",
+        "value": "backdrop-filter: blur(18px)",
+        "purpose": "Sidebar nav panel."
+      },
+      {
+        "name": "auth-card",
+        "value": "backdrop-filter: blur(20px)",
+        "purpose": "Auth card."
+      },
+      {
+        "name": "readout",
+        "value": "backdrop-filter: blur(14px) saturate(1.3)",
+        "purpose": "Cash-flow readout."
+      },
+      {
+        "name": "alert",
+        "value": "backdrop-filter: blur(10px)",
+        "purpose": "Alerts."
+      }
+    ],
+    "ground": "radial-gradient(1100px 760px at 42% 18%, rgba(112, 82, 255, .34), transparent 70%), radial-gradient(900px 640px at 100% 0%, rgba(52, 96, 255, .24), transparent 65%), radial-gradient(1000px 700px at 80% 62%, rgba(70, 90, 255, .18), transparent 70%), radial-gradient(800px 640px at 15% 100%, rgba(214, 92, 196, .16), transparent 65%), linear-gradient(165deg, #1c1752 0%, #110d36 75%); background-attachment: fixed",
+    "motion": [
+      {
+        "name": "ease-expo-out",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Readout rise, chart dot scale-in, mobile drawer slide."
+      },
+      {
+        "name": "state-fast",
+        "value": ".2s",
+        "purpose": "Colour, border, background, and opacity state changes."
+      },
+      {
+        "name": "press",
+        "value": "transform .1s; translateY(1px)",
+        "purpose": "Button active nudge."
+      },
+      {
+        "name": "reveal",
+        "value": ".35s",
+        "purpose": "Transform for readout and dots; drawer at .32s."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition-duration: .01ms",
+        "purpose": "Global prefers-reduced-motion override."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "dash-wide",
+        "value": "1280px"
+      },
+      {
+        "name": "dash-collapse",
+        "value": "1100px"
+      },
+      {
+        "name": "drawer",
+        "value": "960px"
+      },
+      {
+        "name": "auth-stack",
+        "value": "860px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      },
+      {
+        "name": "compact-topbar",
+        "value": "560px"
+      }
+    ],
+    "layout": {
+      "sidebarWidth": "268px",
+      "gridColumns": 12,
+      "gutter": "20px",
+      "gutterMobile": "14px"
+    },
+    "icons": {
+      "grid": "24px",
+      "strokeWidth": 1.75,
+      "linecap": "round",
+      "linejoin": "round",
+      "fill": "none",
+      "color": "currentColor"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single action colour: Run agents, Import, Sign in.",
+      "html": "<button class=\"ds-btn-primary\">Run agents</button>",
+      "css": ".ds-btn-primary { font-family: var(--font, Manrope, system-ui, sans-serif); color: #fff; background: var(--accent-strong, #6d5cf2); border: 1px solid rgba(190, 180, 255, .4); border-radius: 12px; padding: .5rem 1rem; font-weight: 700; font-size: 15px; box-shadow: 0 8px 20px -8px rgba(109, 92, 242, .9); cursor: pointer; transition: background-color .2s, border-color .2s, box-shadow .2s, transform .1s; } .ds-btn-primary:hover { background: #7c6cff; border-color: rgba(210, 202, 255, .6); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent-2, #a99cff); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(139, 123, 255, .35); } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions on glass.",
+      "html": "<button class=\"ds-btn-outline\">Export</button>",
+      "css": ".ds-btn-outline { font-family: var(--font, Manrope, system-ui, sans-serif); color: var(--text, #f2f0ff); background: rgba(255, 255, 255, .04); border: 1px solid var(--border-strong, rgba(206, 200, 255, .26)); border-radius: 12px; padding: .5rem 1rem; font-weight: 700; font-size: 15px; cursor: pointer; transition: background-color .2s, border-color .2s, transform .1s; } .ds-btn-outline:hover { color: #fff; background: rgba(255, 255, 255, .1); border-color: rgba(206, 200, 255, .4); } .ds-btn-outline:focus-visible { outline: 2px solid var(--accent-2, #a99cff); outline-offset: 2px; } .ds-btn-outline:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive confirmation.",
+      "html": "<button class=\"ds-btn-danger\">Delete</button>",
+      "css": ".ds-btn-danger { font-family: var(--font, Manrope, system-ui, sans-serif); color: #2a0710; background: var(--coral, #ff7f8c); border: 1px solid var(--coral, #ff7f8c); border-radius: 12px; padding: .5rem 1rem; font-weight: 700; font-size: 15px; cursor: pointer; transition: background-color .2s; } .ds-btn-danger:hover { background: #ff97a2; border-color: #ff97a2; } .ds-btn-danger:focus-visible { outline: 2px solid var(--accent-2, #a99cff); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Glass input with violet focus halo.",
+      "html": "<input class=\"ds-input\" placeholder=\"Merchant or note\" />",
+      "css": ".ds-input { font-family: var(--font, Manrope, system-ui, sans-serif); font-size: 15px; color: var(--text, #f2f0ff); background: rgba(255, 255, 255, .06); border: 1px solid var(--border, rgba(206, 200, 255, .14)); border-radius: 12px; padding: .55rem .85rem; caret-color: var(--accent-2, #a99cff); transition: border-color .2s, background-color .2s, box-shadow .2s; } .ds-input::placeholder { color: var(--text-3, #9a95cf); } .ds-input:focus, .ds-input:focus-visible { outline: none; background: rgba(255, 255, 255, .09); border-color: rgba(167, 155, 255, .65); box-shadow: 0 0 0 3px rgba(139, 123, 255, .25); }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Top-bar transaction search with leading icon.",
+      "html": "<label class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7.5\"/><path d=\"m20.5 20.5-4-4\"/></svg><input placeholder=\"Search transactions\" /></label>",
+      "css": ".ds-search { font-family: var(--font, Manrope, system-ui, sans-serif); display: flex; align-items: center; gap: 10px; width: 360px; height: 46px; padding: 0 16px; border-radius: 14px; background: rgba(255, 255, 255, .06); border: 1px solid var(--border, rgba(206, 200, 255, .14)); color: var(--text-3, #9a95cf); transition: border-color .2s, background-color .2s; } .ds-search:focus-within { border-color: rgba(167, 155, 255, .6); background: rgba(255, 255, 255, .09); } .ds-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--text, #f2f0ff); font: inherit; font-size: 15px; } .ds-search input::placeholder { color: var(--text-3, #9a95cf); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Glass nav panel with gradient active item.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item is-active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\" rx=\"1.5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\" rx=\"1.5\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\" rx=\"1.5\"/></svg>Dashboard</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/></svg>Transactions</a></nav>",
+      "css": ".ds-nav { font-family: var(--font, Manrope, system-ui, sans-serif); width: 240px; display: flex; flex-direction: column; gap: 4px; padding: 18px 14px; border-radius: 22px; background: linear-gradient(180deg, rgba(36, 30, 92, .72), rgba(20, 17, 58, .78)); border: 1px solid var(--border, rgba(206, 200, 255, .14)); box-shadow: 0 18px 40px -18px rgba(3, 2, 20, .75), 0 2px 6px rgba(3, 2, 20, .35); backdrop-filter: blur(18px); } .ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; color: var(--text-2, #c3bfeb); font-weight: 600; font-size: .94rem; text-decoration: none; border: 1px solid transparent; transition: background-color .2s, color .2s, border-color .2s; } .ds-nav-item:hover { color: var(--text, #f2f0ff); background: rgba(255, 255, 255, .06); } .ds-nav-item:focus-visible { outline: 2px solid var(--accent-2, #a99cff); outline-offset: 2px; } .ds-nav-item.is-active { color: #fff; background: linear-gradient(90deg, rgba(139, 123, 255, .34), rgba(139, 123, 255, .1)); border-color: rgba(167, 155, 255, .35); box-shadow: 0 6px 18px rgba(64, 40, 190, .35); } .ds-nav-item.is-active svg { color: #cfc7ff; }"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Pill label for categories and rule sources.",
+      "html": "<span class=\"ds-tag\">Groceries</span>",
+      "css": ".ds-tag { font-family: var(--font, Manrope, system-ui, sans-serif); display: inline-block; padding: .12rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 700; color: var(--text-2, #c3bfeb); background: rgba(255, 255, 255, .07); border: 1px solid var(--border, rgba(206, 200, 255, .14)); }"
+    },
+    {
+      "name": "Glass Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The default container for every section.",
+      "html": "<section class=\"ds-panel\"><h2>Recent transactions</h2><p>Glass surface with a 1px haze border and pooled shadow.</p></section>",
+      "css": ".ds-panel { font-family: var(--font, Manrope, system-ui, sans-serif); width: 360px; color: var(--text, #f2f0ff); background: var(--surface, rgba(255, 255, 255, .055)); border: 1px solid var(--border, rgba(206, 200, 255, .14)); border-radius: 22px; padding: 20px 22px; box-shadow: 0 18px 40px -18px rgba(3, 2, 20, .75), 0 2px 6px rgba(3, 2, 20, .35); backdrop-filter: blur(16px); } .ds-panel h2 { margin: 0 0 14px; font-size: 1.02rem; font-weight: 750; letter-spacing: -.01em; color: #fff; } .ds-panel p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2, #c3bfeb); }"
+    },
+    {
+      "name": "KPI Tile",
+      "kind": "custom",
+      "refersTo": "tile-income",
+      "description": "Pastel figure tile with delta and bottom area spark.",
+      "html": "<section class=\"ds-tile\"><span class=\"ds-tile-label\">Income</span><span class=\"ds-tile-value\">$4,820.00</span><span class=\"ds-tile-delta\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg><span>6% vs Sep</span></span><svg class=\"ds-tile-spark\" viewBox=\"0 0 100 62\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><defs><linearGradient id=\"ds-sp\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#22a877\" stop-opacity=\".55\"/><stop offset=\"1\" stop-color=\"#22a877\" stop-opacity=\".08\"/></linearGradient></defs><path d=\"M0 44 C 16 40, 22 30, 36 34 S 60 20, 72 24 S 90 12, 100 14 V 62 H 0 Z\" fill=\"url(#ds-sp)\"/><path d=\"M0 44 C 16 40, 22 30, 36 34 S 60 20, 72 24 S 90 12, 100 14\" fill=\"none\" stroke=\"#22a877\" stroke-width=\"2\" vector-effect=\"non-scaling-stroke\"/></svg></section>",
+      "css": ".ds-tile { font-family: var(--font, Manrope, system-ui, sans-serif); position: relative; width: 300px; display: flex; flex-direction: column; padding: 20px 22px 70px; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .5); box-shadow: 0 18px 40px -18px rgba(3, 2, 20, .75), 0 2px 6px rgba(3, 2, 20, .35); background: linear-gradient(140deg, var(--tile-income-a, #e2faf0), var(--tile-income-b, #b8eed8)); color: var(--tile-income-ink, #0e3527); } .ds-tile-label { font-weight: 700; font-size: .92rem; } .ds-tile-value { margin-top: 6px; font-size: 2.25rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; } .ds-tile-delta { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: .8rem; font-weight: 700; color: #0b6b47; } .ds-tile-spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 62px; }"
+    },
+    {
+      "name": "Attention Row",
+      "kind": "custom",
+      "refersTo": "attention-row",
+      "description": "Toned glass link row with icon well, count pill, and chevron.",
+      "html": "<a class=\"ds-att\" href=\"#\"><span class=\"ds-att-icon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg></span><span class=\"ds-att-text\"><span class=\"ds-att-title\">Flagged charges</span><span class=\"ds-att-sub\">Cloud Storage Co · $119.00</span></span><span class=\"ds-att-value\">3</span><span class=\"ds-att-chev\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></span></a>",
+      "css": ".ds-att { font-family: var(--font, Manrope, system-ui, sans-serif); width: 340px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, .055); border: 1px solid var(--border, rgba(206, 200, 255, .14)); color: var(--text, #f2f0ff); text-decoration: none; transition: background-color .2s, border-color .2s; } .ds-att:hover { color: #fff; background: rgba(255, 255, 255, .09); border-color: var(--border-strong, rgba(206, 200, 255, .26)); } .ds-att:focus-visible { outline: 2px solid var(--accent-2, #a99cff); outline-offset: 2px; } .ds-att-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 10px; background: rgba(255, 127, 140, .16); color: #ffb3bb; } .ds-att-text { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ds-att-title { font-weight: 700; font-size: .92rem; } .ds-att-sub { color: var(--text-3, #9a95cf); font-size: .78rem; line-height: 1.35; } .ds-att-value { margin-left: auto; padding: .15rem .6rem; border-radius: 999px; font-weight: 800; font-size: .85rem; font-variant-numeric: tabular-nums; background: rgba(255, 127, 140, .18); color: #ffc2c8; } .ds-att-chev { display: grid; color: var(--text-3, #9a95cf); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night-Sky Glass Console",
+    "overview": "FinanceAgent is a dark, lit instrument. A deep indigo ground carries soft violet, blue, and pink glows fixed to the viewport; every working surface floats on it as frosted glass with a single pale 1px border. Against that night, the month's three headline numbers (income, spending, net) are the only light-ground objects on the screen: pastel tiles that each carry their own area history along the bottom edge. Everything else stays in the glass register so those three tiles, and the cash-flow horizon beneath them, read first.\n\nThe density is that of an operating console, not a marketing page: a 268px sidebar, a top bar with search and an alerts chip, then a 12-column grid of panels with 20px gutters. One family (Manrope) does all the talking, heavy and tightly tracked for figures and headings, regular for prose, with tabular numerals wherever money appears. Icons are a single drawn set on a 24px grid at a 1.75 stroke, so every glyph shares one hand.\n\nThe world is a deliberate refusal of the grey admin template: colour carries meaning (violet for action and selection, mint for money in and good change, coral for money out, flags, and danger, amber for warnings) rather than decoration.",
+    "keyCharacteristics": [
+      "Indigo night ground with fixed radial glows; glass panels with blur and a 1px pale-lavender border.",
+      "Three pastel KPI tiles (mint, peach, periwinkle) are the only light surfaces in the signed-in app.",
+      "Violet primary; mint up, coral down, amber warn; series colours repeat across tiles, chart, and legend.",
+      "Manrope throughout, 800 weight for figures and page titles, tabular numerals for all money.",
+      "Generous rounding (12px controls, 14px rows, 22px containers); line icons at 1.75 stroke.",
+      "Charts are server-rendered SVG with HTML readouts, not a chart library."
+    ],
+    "rules": [
+      {
+        "name": "The Meaning-Not-Decoration Rule",
+        "body": "Mint, coral, and amber are reserved for money direction and status. Never use them as ornament; a coral element must be something the user should look at.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Lights Rule",
+        "body": "Light-ground surfaces in the signed-in shell are the three KPI tiles only. New panels stay in glass.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Series Rule",
+        "body": "Income is always mint and spending is always apricot, in tiles, chart lines, hover dots, and legend swatches alike.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Every currency value is set with tabular numerals and never wraps.",
+        "section": "typography"
+      },
+      {
+        "name": "The Header-Only Caps Rule",
+        "body": "Uppercase tracked text exists for table column headers. It is not used for section labels above headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Frosted Edge Rule",
+        "body": "Every floating surface gets translucency, a blur, and a 1px Haze Border together. A glass fill without the border, or a border on an opaque fill, breaks the world.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** put every new surface on glass: Glass fill, 1px Haze Border, backdrop blur, and the panel pool shadow, at 22px radius for containers.",
+      "**Do** keep income mint and spending apricot everywhere a series appears, and reserve coral for flags, overspend, and destructive actions.",
+      "**Do** set every currency value with tabular numerals and no wrapping; positive in #6fe3b8, negative in #ff9ca6 on dark.",
+      "**Do** draw new icons on the 24px grid at 1.75 stroke with round caps, inheriting currentColor.",
+      "**Do** open pages with the page head (title, Mist subtitle, actions right) and compose dashboards on the 12-column, 20px-gap grid.",
+      "**Do** reveal hover detail on focus as well, and keep the reduced-motion override intact."
+    ],
+    "donts": [
+      "**Don't** add light-ground cards inside the shell; the three KPI tiles are the only pastel surfaces.",
+      "**Don't** use mint, coral, or amber decoratively, or let a status colour fill a large area.",
+      "**Don't** introduce a second typeface or set money in proportional figures.",
+      "**Don't** place uppercase tracked labels above headings; caps live only in table column headers.",
+      "**Don't** use black or hard-offset shadows; depth is soft, indigo-tinted, and pooled below.",
+      "**Don't** pull in a chart library or raster chart images; charts are SVG plus HTML in this system's colours."
+    ]
+  }
+}

@@ -4,9 +4,14 @@
 @inject FinanceQueryService Queries
 @inject BudgetAdvisorAgent Advisor
 
-<PageTitle>Budgets</PageTitle>
+<PageTitle>Budgets · FinanceAgent</PageTitle>
 
-<h1>Budgets</h1>
+<div class="page-head">
+    <div>
+        <h1>Budgets</h1>
+        <p class="page-sub">Monthly limits for each expense category, with suggestions based on how you actually spend.</p>
+    </div>
+</div>
 
 @if (status is not null)
 {
@@ -52,7 +57,7 @@
                     <tr>
                         <td>
                             @row.Name
-                            @if (row.ExcludeFromBudget) { <span class="badge text-bg-light">not spending</span> }
+                            @if (row.ExcludeFromBudget) { <span class="tag ms-1">not spending</span> }
                         </td>
                         <td class="text-end money @(row.Budget > 0 && row.Latest > row.Budget ? "neg" : "")">@row.Latest.ToString("C")</td>
                         <td class="text-end money">@row.Average.ToString("C")</td>

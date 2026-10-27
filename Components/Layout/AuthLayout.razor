@@ -1,0 +1,18 @@
+@inherits LayoutComponentBase
+
+<div class="auth-shell">
+    <section class="auth-intro" aria-label="About FinanceAgent">
+        <Logo />
+        <h2>See where your money went, and why.</h2>
+        <ul>
+            <li><Icon Name="upload" Size="18" />Import the CSV your bank already gives you</li>
+            <li><Icon Name="tag" Size="18" />Categories that learn from every correction</li>
+            <li><Icon Name="alert" Size="18" />Duplicate charges and price hikes flagged for you</li>
+            <li><Icon Name="activity" Size="18" />Every automatic change logged with its reason</li>
+        </ul>
+        <p>Your data stays in your own database. No bank logins, no outside services.</p>
+    </section>
+    <main class="auth-main">
+        @Body
+    </main>
+</div>

@@ -37,9 +37,7 @@ category you pick. `Uncategorized` is built in and can't be renamed or deleted, 
 
 1. Run the app (`dotnet run`). It creates or migrates the database on startup.
 2. Open the app, choose **Create account**, and sign in.
-3. Import `SampleData/sample_transactions.csv` on the **Import** page to try it out.
-   `SampleData/sample_debit_credit.csv` shows the Debit/Credit column layout and overlaps with the first file,
-   so it also exercises duplicate detection.
+3. Import a file from `SampleData/` on the **Import** page (see below).
 
 ## Database (SQL Server / SSMS)
 
@@ -59,6 +57,22 @@ dotnet ef migrations script --idempotent -o Database/FinanceAgentDb.sql
 ```
 
 To use a different SQL Server instance, change `ConnectionStrings:FinanceDb` in `appsettings.json`.
+
+## Sample data
+
+Synthetic statements covering July–October 2026, in the column layouts real banks export. Upload them on the
+**Import** page.
+
+| File | Layout | What it shows off |
+|---|---|---|
+| `chase_checking_jul-oct_2026.csv` | Chase checking: `Details, Posting Date, Description, Amount, Type, Balance`, newest first | Main demo file (106 rows): paychecks, bills, groceries, dining. Planted anomalies: a Netflix price rise, a Spotify double charge, an unusually large Amazon order, and a $1,299 first-time Apple charge. A few rows (tax refund, Venmo cash-out) land in the review queue. |
+| `capital_one_card_jul-oct_2026.csv` | Capital One card: `Transaction Date, Posted Date, Card No., Description, Category, Debit, Credit` | Separate Debit/Credit columns, card payments, a flight and its refund, a Kroger double charge, a large first-time Guitar Center purchase |
+| `bofa_savings_jul-oct_2026.csv` | `Date, Description, Amount, Running Bal.` with `$` and thousands separators | Transfers and interest (interest lands in review: add an Income category for it) |
+| `messy_export_oct_2026.csv` | Hand-edited: `Transaction Date, Payee, Amount, Notes` | Accounting negatives `($12.34)`, quoted commas, a blank line, and a "pending" row the importer rejects. Its paychecks overlap the Chase file and are skipped as duplicates. |
+| `roommate_checking_jul-oct_2026.csv` | `Date, Description, Amount` | A second person's account for trying multiple user accounts. Rent has no category yet; create one on the Categories page. |
+| `sample_transactions.csv`, `sample_debit_credit.csv` | Original small demo files | Quick smoke test |
+
+Importing the same file twice skips every row, so it's safe to retry.
 
 ## CSV format
 

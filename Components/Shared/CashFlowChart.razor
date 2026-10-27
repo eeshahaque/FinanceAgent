@@ -1,0 +1,88 @@
+@using FinanceAgent.Services
+@* Income vs spending by month. Shapes are SVG; labels, hit areas, and the hover readout are HTML so
+   text stays crisp at any width and the readout can use real glass (backdrop blur). *@
+<div class="cf" role="img" aria-label="@AriaSummary">
+    <div class="cf-yaxis" aria-hidden="true">
+        @for (int i = 0; i <= Ticks; i++)
+        {
+            var value = axisMax * (Ticks - i) / Ticks;
+            <span style="top:@Pct(100.0 * i / Ticks)">@ChartMath.Compact(value)</span>
+        }
+    </div>
+    <div class="cf-plot">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <defs>
+                <linearGradient id="cf-in" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="var(--series-income)" stop-opacity=".3" />
+                    <stop offset="1" stop-color="var(--series-income)" stop-opacity="0" />
+                </linearGradient>
+                <linearGradient id="cf-out" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="var(--series-spend)" stop-opacity=".45" />
+                    <stop offset="1" stop-color="var(--series-spend)" stop-opacity="0" />
+                </linearGradient>
+            </defs>
+            @for (int i = 1; i < Ticks; i++)
+            {
+                <line x1="0" x2="100" y1="@ChartMath.F(100.0 * i / Ticks)" y2="@ChartMath.F(100.0 * i / Ticks)" class="cf-grid" vector-effect="non-scaling-stroke" />
+            }
+            <path d="@ChartMath.SmoothArea(Edge(income), 100, 0)" fill="url(#cf-in)" />
+            <path d="@ChartMath.SmoothArea(Edge(spend), 100, 0)" fill="url(#cf-out)" />
+            <path d="@ChartMath.SmoothLine(Edge(income), 0, 100)" class="cf-line cf-line-in" vector-effect="non-scaling-stroke" />
+            <path d="@ChartMath.SmoothLine(Edge(spend), 0, 100)" class="cf-line cf-line-out" vector-effect="non-scaling-stroke" />
+        </svg>
+
+        @for (int i = 0; i < Months.Count; i++)
+        {
+            var m = Months[i];
+            var left = 100.0 * i / Months.Count;
+            var flip = i >= Months.Count / 2;
+            <div class="cf-col @(i == Months.Count - 1 ? "is-current" : "")" style="left:@Pct(left);width:@Pct(100.0 / Months.Count)" tabindex="0"
+                 aria-label="@($"{m.Month:MMMM yyyy}: income {m.Income:C0}, spending {m.Spending:C0}, net {m.Net:C0}")">
+                <span class="cf-guide"></span>
+                <span class="cf-dot cf-dot-in" style="top:@Pct(income[i].Y)"></span>
+                <span class="cf-dot cf-dot-out" style="top:@Pct(spend[i].Y)"></span>
+                <div class="cf-tip @(flip ? "flip" : "")" style="top:@Pct(Math.Min(income[i].Y, spend[i].Y))">
+                    <div class="cf-tip-month">@m.Month.ToString("MMMM yyyy")</div>
+                    <div class="cf-tip-row"><i class="sw sw-in"></i>Income<b class="money">@m.Income.ToString("C0")</b></div>
+                    <div class="cf-tip-row"><i class="sw sw-out"></i>Spending<b class="money">@m.Spending.ToString("C0")</b></div>
+                    <div class="cf-tip-row cf-tip-net">Net<b class="money @(m.Net < 0 ? "neg" : "pos")">@m.Net.ToString("C0")</b></div>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="cf-xaxis" aria-hidden="true">
+        @for (int i = 0; i < Months.Count; i++)
+        {
+            <span style="left:@Pct(100.0 * (i + 0.5) / Months.Count)">@Months[i].Month.ToString("MMM")</span>
+        }
+    </div>
+</div>
+
+@code {
+    private const int Ticks = 4;
+
+    [Parameter, EditorRequired] public IReadOnlyList<MonthFlow> Months { get; set; } = Array.Empty<MonthFlow>();
+
+    private double axisMax;
+    private List<(double X, double Y)> income = new();
+    private List<(double X, double Y)> spend = new();
+
+    private string AriaSummary => $"Cash flow for the last {Months.Count} months";
+
+    protected override void OnParametersSet()
+    {
+        var peak = Months.Count == 0 ? 0 : (double)Months.Max(m => Math.Max(m.Income, m.Spending));
+        axisMax = ChartMath.NiceMax(peak * 1.08);
+        income = Points(m => m.Income);
+        spend = Points(m => m.Spending);
+    }
+
+    private List<(double X, double Y)> Points(Func<MonthFlow, decimal> pick) =>
+        Months.Select((m, i) => (100.0 * (i + 0.5) / Months.Count, 100 - (double)pick(m) / axisMax * 100)).ToList();
+
+    // Carries each series flat to both edges so the areas fill the plot like a horizon
+    private static List<(double X, double Y)> Edge(List<(double X, double Y)> pts) =>
+        pts.Count == 0 ? pts : new[] { (0.0, pts[0].Y) }.Concat(pts).Append((100.0, pts[^1].Y)).ToList();
+
+    private static string Pct(double v) => ChartMath.F(v) + "%";
+}

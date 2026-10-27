@@ -4,11 +4,16 @@
 @inject TransactionService TxnService
 @inject AnomalyDetectionAgent AnomalyAgent
 
-<PageTitle>Transactions</PageTitle>
+<PageTitle>Transactions · FinanceAgent</PageTitle>
 
-<h1>Transactions</h1>
+<div class="page-head">
+    <div>
+        <h1>Transactions</h1>
+        <p class="page-sub">Filter, fix categories, and clear flags. Changing a category with “Remember merchant” on teaches the rules.</p>
+    </div>
+</div>
 
-<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+<div class="panel filter-bar">
     <select class="form-select w-auto" value="@monthFilter" @onchange="e => SetFilter(() => monthFilter = Text(e))">
         <option value="">All months</option>
         @foreach (var m in months)
@@ -23,7 +28,8 @@
             <option value="@c.Id">@c.Name</option>
         }
     </select>
-    <input class="form-control w-auto" placeholder="Search description" value="@search"
+    <label for="txn-search" class="visually-hidden">Search descriptions</label>
+    <input id="txn-search" type="search" class="form-control w-auto" placeholder="Search descriptions" value="@search"
            @onchange="e => SetFilter(() => search = Text(e))" />
     <div class="form-check ms-1">
         <input class="form-check-input" type="checkbox" id="flagged" checked="@flaggedOnly" @onchange="e => SetFilter(() => flaggedOnly = (bool)e.Value!)" />
@@ -50,7 +56,8 @@
 }
 else
 {
-    <p class="text-muted small">
+    <div class="panel">
+    <p class="text-muted small mb-2">
         @rows.Count transactions · total <span class="money">@rows.Sum(t => t.Amount).ToString("C")</span>
         @if (rows.Count >= Limit) { <span> (showing the first @Limit — narrow the filters to see more)</span> }
     </p>
@@ -70,12 +77,12 @@ else
                 @foreach (var t in rows)
                 {
                     <tr>
-                        <td class="text-nowrap">@t.Date.ToString("yyyy-MM-dd")</td>
+                        <td class="text-nowrap text-muted money">@t.Date.ToString("MMM d, yyyy")</td>
                         <td>
                             @t.RawDescription
                             @if (t.FlaggedAsAnomaly && !t.AnomalyDismissed)
                             {
-                                <div class="flag">⚠ @t.AnomalyReason</div>
+                                <div class="flag"><Icon Name="alert" Size="14" /><span>@t.AnomalyReason</span></div>
                             }
                         </td>
                         <td class="text-end money @(t.Amount < 0 ? "neg" : "pos")">@t.Amount.ToString("C")</td>
@@ -101,6 +108,7 @@ else
             </tbody>
         </table>
     </div>
+    </div>
 }
 
 @code {
@@ -110,6 +118,7 @@ else
     [SupplyParameterFromQuery(Name = "month")] public string? MonthParam { get; set; }
     [SupplyParameterFromQuery(Name = "flagged")] public bool FlaggedParam { get; set; }
     [SupplyParameterFromQuery(Name = "review")] public bool ReviewParam { get; set; }
+    [SupplyParameterFromQuery(Name = "q")] public string? SearchParam { get; set; }
 
     private List<Transaction>? rows;
     private List<Category> categories = new();
@@ -128,6 +137,7 @@ else
         monthFilter = MonthParam ?? "";
         flaggedOnly = FlaggedParam;
         reviewOnly = ReviewParam;
+        search = SearchParam;
 
         categories = await Queries.GetCategoriesAsync();
         months = await Queries.GetMonthsWithDataAsync();

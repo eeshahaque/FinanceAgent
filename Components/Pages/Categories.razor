@@ -3,14 +3,18 @@
 @using FinanceAgent.Data
 @inject CategoryService CategoryOps
 
-<PageTitle>Categories</PageTitle>
+<PageTitle>Categories · FinanceAgent</PageTitle>
 
-<h1>Categories</h1>
-<p class="text-muted">
+<div class="page-head">
+    <div>
+        <h1>Categories</h1>
+        <p class="page-sub">
     Add, rename, or delete the categories your transactions are sorted into.
     <strong>Expense</strong> categories count toward spending and budgets; <strong>Income</strong> and
-    <strong>Transfer</strong> categories don't.
-</p>
+            <strong>Transfer</strong> categories don't.
+        </p>
+    </div>
+</div>
 
 @if (status is not null)
 {
@@ -108,7 +112,7 @@
                             {
                                 <td>
                                     @row.Name
-                                    @if (row.IsSystem) { <span class="badge text-bg-light ms-1" title="Holds transactions waiting for review">built-in</span> }
+                                    @if (row.IsSystem) { <span class="tag ms-1" title="Holds transactions waiting for review">built-in</span> }
                                 </td>
                                 <td>@row.Kind</td>
                                 <td class="money">@(row.Kind == CategoryKind.Expense && !row.IsSystem ? row.Budget.ToString("C") : "—")</td>

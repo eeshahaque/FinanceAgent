@@ -1,0 +1,33 @@
+@* Month-over-month change for a KPI tile. Shows nothing when there's no earlier month to compare.
+   Colored by meaning: more income is good, more spending is bad. *@
+@if (Previous is decimal prev && PrevMonth is DateTime month)
+{
+    var diff = Current - prev;
+    var tone = diff == 0 ? "" : (diff > 0) == UpIsGood ? "good" : "bad";
+    <span class="tile-delta @tone" title="@($"{month:MMMM}: {prev:C}")">
+        @if (diff == 0)
+        {
+            <Icon Name="flat" Size="15" />
+            <span>@($"Same as {month:MMM}")</span>
+        }
+        else
+        {
+            <Icon Name="@(diff > 0 ? "up" : "down")" Size="15" />
+            @if (prev != 0)
+            {
+                <span>@($"{Math.Abs(diff / Math.Abs(prev)):P0} vs {month:MMM}")</span>
+            }
+            else
+            {
+                <span>@($"{(diff > 0 ? "+" : "-")}{Math.Abs(diff):C0} vs {month:MMM}")</span>
+            }
+        }
+    </span>
+}
+
+@code {
+    [Parameter] public decimal Current { get; set; }
+    [Parameter] public decimal? Previous { get; set; }
+    [Parameter] public DateTime? PrevMonth { get; set; }
+    [Parameter] public bool UpIsGood { get; set; } = true;
+}

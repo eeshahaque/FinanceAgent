@@ -26,3 +26,7 @@ appsettings.*.local.json
 # OS files
 Thumbs.db
 .DS_Store
+
+# Design review captures
+.impeccable/review/
+.impeccable/hook.cache.json

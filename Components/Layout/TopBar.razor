@@ -1,0 +1,46 @@
+@inject FinanceQueryService Queries
+
+@* Rendered with the layout on every page load, so the alert count is current after each navigation *@
+<header class="topbar">
+    <label for="nav-toggle" class="icon-btn menu-btn" title="Menu">
+        <Icon Name="menu" />
+        <span class="visually-hidden">Open menu</span>
+    </label>
+
+    <AuthorizeView>
+        <Authorized>
+            <form class="search" action="transactions" method="get" role="search">
+                <Icon Name="search" Size="18" />
+                <label for="top-search" class="visually-hidden">Search transactions</label>
+                <input id="top-search" name="q" type="search" placeholder="Search transactions" autocomplete="off" />
+            </form>
+
+            <a class="alerts @(flagged > 0 ? "has-alerts" : "")" href="transactions?flagged=true"
+               title="@(flagged == 1 ? "1 flagged transaction" : $"{flagged} flagged transactions")">
+                <span class="bell">
+                    <Icon Name="bell" Size="18" />
+                    @if (flagged > 0)
+                    {
+                        <span class="count">@(flagged > 99 ? "99+" : flagged.ToString())</span>
+                    }
+                </span>
+                <span class="alerts-label">Alerts</span>
+                <span class="avatar sm" aria-hidden="true">@NavMenu.Initials(context.User)</span>
+            </a>
+        </Authorized>
+    </AuthorizeView>
+</header>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private int flagged;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true)
+        {
+            flagged = await Queries.CountFlaggedAsync();
+        }
+    }
+}
